@@ -26,3 +26,6 @@ export default function RootLayout() {
         </TamaguiProvider>
     );
 }
+
+
+//test
