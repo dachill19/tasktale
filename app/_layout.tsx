@@ -11,14 +11,7 @@ export default function RootLayout() {
                 <Theme name="green">
                     {/* <PortalProvider shouldAddRootHost> */}
                     <SafeAreaProvider>
-                        <Stack>
-                            <Stack.Screen
-                                name="(main)"
-                                options={{
-                                    headerShown: false,
-                                }}
-                            />
-                        </Stack>
+                        <Stack screenOptions={{ headerShown: false }} />
                     </SafeAreaProvider>
                     {/* </PortalProvider> */}
                 </Theme>
@@ -26,6 +19,5 @@ export default function RootLayout() {
         </TamaguiProvider>
     );
 }
-
 
 //test

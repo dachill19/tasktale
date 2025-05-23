@@ -43,7 +43,7 @@ export default function LandingPage() {
                 -Mu
             </Text>
 
-            <Link href="/signup" asChild>
+            <Link href="/auth" asChild>
                 <Button
                     backgroundColor="#4CAF50"
                     color="white"
