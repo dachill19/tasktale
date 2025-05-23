@@ -34,7 +34,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 justifyContent="space-between"
                 alignItems="center"
                 backgroundColor="$background" // atau langsung "#fff"
-                paddingVertical="$4" // 15px jika $1 = 4px
+                paddingVertical="$3" // 15px jika $1 = 4px
                 elevation={2}
                 borderTopWidth={2}
                 borderColor="$borderColor" // opsional, bisa custom warna
@@ -47,9 +47,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                             position: "absolute",
                             backgroundColor: "#388e3c",
                             borderRadius: 40,
-                            marginHorizontal: 5,
+                            marginHorizontal: 8,
                             height: dimensions.height - 20,
-                            width: buttonWidth - 10,
+                            width: buttonWidth - 16,
                         },
                     ]}
                 />

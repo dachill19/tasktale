@@ -22,11 +22,11 @@ const TabBarButton = ({
     label: string;
 }) => {
     const icon: Record<RouteName, (props: any) => JSX.Element> = {
-        index: (props) => <Feather name="layout" size={30} {...props} />,
-        tasks: (props) => <Feather name="check-square" size={30} {...props} />,
-        journal: (props) => <Feather name="book-open" size={30} {...props} />,
+        index: (props) => <Feather name="layout" size={24} {...props} />,
+        tasks: (props) => <Feather name="check-square" size={24} {...props} />,
+        journal: (props) => <Feather name="book-open" size={24} {...props} />,
         analytics: (props) => (
-            <Feather name="bar-chart-2" size={30} {...props} />
+            <Feather name="bar-chart-2" size={24} {...props} />
         ),
     };
 
