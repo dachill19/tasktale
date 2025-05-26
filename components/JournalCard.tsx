@@ -43,6 +43,10 @@ const JournalCard: React.FC<JournalCardProps> = ({
             position="relative"
             width="100%"
             elevation={2}
+            animation="quick"
+            pressStyle={{
+                scale: 0.95, // opsional, beri efek scale saat ditekan
+            }}
         >
             {/* Mood + Date */}
             <XStack

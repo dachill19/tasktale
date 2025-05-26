@@ -1,8 +1,7 @@
-import AnimatedCard from "@/components/AnimatedCard";
 import FilterToggleGroup from "@/components/FilterToggleGroup";
 import JournalCard from "@/components/JournalCard";
 import React, { useState } from "react";
-import { ScrollView } from "react-native";
+import { FlatList } from "react-native";
 import { Text, YStack } from "tamagui";
 
 const Journal = () => {
@@ -83,23 +82,23 @@ const Journal = () => {
                 onValueChange={setFilter}
             />
 
-            <ScrollView
+            <FlatList
+                data={journal}
+                keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{ paddingBottom: 100, width: "100%" }}
-            >
-                {journal.map((task, index) => (
-                    <AnimatedCard key={task.id} index={index}>
-                        <JournalCard
-                            date={task.date}
-                            mood={task.mood}
-                            content={task.content}
-                            image={task.image}
-                            tags={task.tags}
-                            onEdit={() => handleEdit(task.id)}
-                            onDelete={() => handleDelete(task.id)}
-                        />
-                    </AnimatedCard>
-                ))}
-            </ScrollView>
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                    <JournalCard
+                        date={item.date}
+                        mood={item.mood}
+                        content={item.content}
+                        image={item.image}
+                        tags={item.tags}
+                        onEdit={() => handleEdit(item.id)}
+                        onDelete={() => handleDelete(item.id)}
+                    />
+                )}
+            />
         </YStack>
     );
 };

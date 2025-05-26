@@ -1,12 +1,22 @@
-import AnimatedCard from "@/components/AnimatedCard";
 import FilterToggleGroup from "@/components/FilterToggleGroup";
+import { FormDialog } from "@/components/FormDialog";
 import TaskCard from "@/components/TaskCard";
-import React, { useState } from "react";
-import { ScrollView } from "react-native";
-import { Text, YStack } from "tamagui";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { FlatList } from "react-native";
+import { Input, Label, Text, YStack } from "tamagui";
 
 const Tasks = () => {
     const [filter, setFilter] = useState("all");
+    const params = useLocalSearchParams();
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        if (params.openDialog === "true") {
+            setOpen(true);
+            router.replace("/tasks");
+        }
+    }, [params]);
 
     type Priority = "Tinggi" | "Sedang" | "Rendah";
 
@@ -91,6 +101,17 @@ const Tasks = () => {
         // logic delete
     };
 
+    const handleSave = () => {
+        // Logic simpan data
+        console.log("Save clicked");
+        setOpen(false);
+    };
+
+    const handleCancel = () => {
+        console.log("Cancel clicked");
+        setOpen(false);
+    };
+
     const toggleItems = [
         { value: "all", label: "Semua" },
         { value: "active", label: "Aktif" },
@@ -105,6 +126,31 @@ const Tasks = () => {
             paddingHorizontal="$4"
             alignItems="center"
         >
+            <FormDialog
+                open={open}
+                onOpenChange={setOpen}
+                title="Add Task"
+                description="Make changes to your profile here. Click save when you're done."
+                onSave={handleSave}
+                onCancel={handleCancel}
+            >
+                <YStack gap="$2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                        width="100%"
+                        id="title"
+                        placeholder="Apa yang perlu dilakukan?"
+                    />
+                </YStack>
+                <YStack gap="$2">
+                    <Label htmlFor="description">Description (optional)</Label>
+                    <Input
+                        width="100%"
+                        id="description"
+                        placeholder="Tambahkan detail..."
+                    />
+                </YStack>
+            </FormDialog>
             <Text
                 fontSize="$7"
                 fontWeight="bold"
@@ -121,26 +167,26 @@ const Tasks = () => {
                 onValueChange={setFilter}
             />
 
-            <ScrollView
+            <FlatList
+                data={tasks}
+                keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={{ paddingBottom: 100, width: "100%" }}
-            >
-                {tasks.map((task, index) => (
-                    <AnimatedCard key={task.id} index={index}>
-                        <TaskCard
-                            title={task.title}
-                            description={task.description}
-                            priority={task.priority}
-                            date={task.date}
-                            completedCount={task.completedCount}
-                            totalCount={task.totalCount}
-                            subTasks={task.subTasks}
-                            completed={task.completed}
-                            onEdit={() => handleEdit(task.id)}
-                            onDelete={() => handleDelete(task.id)}
-                        />
-                    </AnimatedCard>
-                ))}
-            </ScrollView>
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                    <TaskCard
+                        title={item.title}
+                        description={item.description}
+                        priority={item.priority}
+                        date={item.date}
+                        completedCount={item.completedCount}
+                        totalCount={item.totalCount}
+                        subTasks={item.subTasks}
+                        completed={item.completed}
+                        onEdit={() => handleEdit(item.id)}
+                        onDelete={() => handleDelete(item.id)}
+                    />
+                )}
+            />
         </YStack>
     );
 };

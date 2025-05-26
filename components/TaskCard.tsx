@@ -127,6 +127,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
             position="relative"
             width="100%"
             elevation={2}
+            animation="quick"
+            pressStyle={{
+                scale: 0.95, // opsional, beri efek scale saat ditekan
+            }}
         >
             <XStack
                 justifyContent="space-between"

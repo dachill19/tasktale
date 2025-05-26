@@ -66,13 +66,13 @@ const TabBarButton = ({
         <Pressable onPress={onPress} style={styles.tabBarItem}>
             <Animated.View style={animatedIconStyle}>
                 {icon[routeName]({
-                    color: isFocused ? "#fff" : "#388e3c",
+                    color: isFocused ? "#fff" : "hsl(152, 57.5%, 37.6%)",
                 })}
             </Animated.View>
             <Animated.Text
                 style={[
                     {
-                        color: isFocused ? "#fff" : "#388e3c",
+                        color: isFocused ? "#fff" : "hsl(152, 57.5%, 37.6%)",
                         fontSize: 14,
                     },
                     animatedTextStyle,

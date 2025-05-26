@@ -1,7 +1,10 @@
 import AnimatedAuthForm from "@/components/AnimatedAuthForm";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ImageBackground } from "react-native";
+import { Alert, ImageBackground, TouchableOpacity } from "react-native";
 import { Button, Image, Input, Stack, Text, YStack } from "tamagui";
+
+import { loginWithEmail, loginWithGoogle, signupWithEmail } from "@/utils/auth";
 
 const backgroundImages = [
     require("@/assets/images/background1.png"),
@@ -10,7 +13,7 @@ const backgroundImages = [
 ];
 
 export default function AuthPage() {
-    const [isLogin, setIsLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState(true);
     const [bgIndex, setBgIndex] = useState(0);
 
     useEffect(() => {
@@ -43,6 +46,35 @@ export default function AuthPage() {
 }
 
 function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            setError("Please fill in all fields");
+            return;
+        }
+
+        setError("");
+        setLoading(true);
+
+        try {
+            const { error } = await loginWithEmail(email, password);
+            if (error) {
+                setError(error.message);
+            } else {
+                router.replace("/(main)");
+            }
+        } catch {
+            setError("An unexpected error occurred");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <YStack
             width="100%"
@@ -65,6 +97,8 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
             <Stack gap="$5" width="100%">
                 <Input
                     placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
                     borderColor="$gray4"
@@ -72,9 +106,14 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    disabled={loading}
                 />
                 <Input
                     placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
                     secureTextEntry
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
@@ -83,9 +122,14 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    disabled={loading}
                 />
             </Stack>
+
+            {error ? <Text color="red">{error}</Text> : null}
+
             <Button
+                onPress={handleLogin}
                 backgroundColor="#4CAF50"
                 color="white"
                 fontSize="$8"
@@ -93,15 +137,31 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
                 borderRadius={20}
                 width="100%"
                 height="$5"
+                disabled={loading}
+                opacity={loading ? 0.6 : 1}
             >
-                Login
+                {loading ? "Signing In..." : "Login"}
             </Button>
+
             <Text fontSize="$5">or</Text>
-            <Image
-                source={require("@/assets/images/google_icon.png")}
-                width={50}
-                height={50}
-            />
+
+            <TouchableOpacity
+                onPress={() => loginWithGoogle(router, setLoading, setError)}
+                disabled={loading}
+                style={{ opacity: loading ? 0.6 : 1 }}
+            >
+                <YStack alignItems="center" gap="$2">
+                    <Image
+                        source={require("@/assets/images/google_icon.png")}
+                        width={50}
+                        height={50}
+                    />
+                    <Text fontSize="$3" color="$gray11">
+                        {loading ? "Connecting..." : "Continue with Google"}
+                    </Text>
+                </YStack>
+            </TouchableOpacity>
+
             <Text fontSize="$5" color="$gray12" fontWeight="bold">
                 Don't have an account?{" "}
                 <Text color="$blue8" fontWeight="bold" onPress={switchToSignup}>
@@ -113,6 +173,50 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
 }
 
 function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSignup = async () => {
+        if (!username || !email || !password || !confirmPassword) {
+            setError("Please fill in all fields");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters long");
+            return;
+        }
+
+        setError("");
+        setLoading(true);
+
+        try {
+            const { error } = await signupWithEmail(username, email, password);
+            if (error) {
+                setError(error.message);
+            } else {
+                Alert.alert(
+                    "Check your email",
+                    "We've sent you a confirmation link to complete your registration.",
+                    [{ text: "OK", onPress: () => switchToLogin() }]
+                );
+            }
+        } catch {
+            setError("An unexpected error occurred");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <YStack
             width="100%"
@@ -135,6 +239,8 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
             <Stack gap="$5" width="100%">
                 <Input
                     placeholder="User Name"
+                    value={username}
+                    onChangeText={setUsername}
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
                     borderColor="$gray4"
@@ -142,9 +248,12 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    disabled={loading}
                 />
                 <Input
                     placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
                     borderColor="$gray4"
@@ -152,9 +261,14 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    disabled={loading}
                 />
                 <Input
                     placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
                     secureTextEntry
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
@@ -163,9 +277,12 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    disabled={loading}
                 />
                 <Input
                     placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
                     secureTextEntry
                     placeholderTextColor="$gray10"
                     backgroundColor="white"
@@ -174,9 +291,14 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
                     borderRadius={50}
                     padding={10}
                     focusStyle={{ borderColor: "$yellow6" }}
+                    disabled={loading}
                 />
             </Stack>
+
+            {error ? <Text color="red">{error}</Text> : null}
+
             <Button
+                onPress={handleSignup}
                 backgroundColor="#4CAF50"
                 color="white"
                 fontSize="$8"
@@ -184,9 +306,12 @@ function SignupForm({ switchToLogin }: { switchToLogin: () => void }) {
                 borderRadius={20}
                 width="100%"
                 height="$5"
+                disabled={loading}
+                opacity={loading ? 0.6 : 1}
             >
-                Register
+                {loading ? "Creating Account..." : "Register"}
             </Button>
+
             <Text fontSize="$5" color="$gray12" fontWeight="bold">
                 Already Have Account?{" "}
                 <Text color="$blue8" fontWeight="bold" onPress={switchToLogin}>

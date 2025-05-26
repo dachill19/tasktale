@@ -1,11 +1,24 @@
+import { FormDialog } from "@/components/FormDialog";
 import { supabase } from "@/utils/supabase";
 import React, { useEffect, useState } from "react";
-import { Text, View } from "tamagui";
+import { Fieldset, Input, Label, Text, View } from "tamagui";
 
 export default function App() {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
+
+    const handleSave = () => {
+        // Logic simpan data
+        console.log("Save clicked");
+        setOpen(false);
+    };
+
+    const handleCancel = () => {
+        console.log("Cancel clicked");
+        setOpen(false);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -30,6 +43,21 @@ export default function App() {
             {data.map((item, index) => (
                 <Text key={index}>{JSON.stringify(item)}</Text>
             ))}
+            <FormDialog
+                open={open}
+                onOpenChange={setOpen}
+                title="Edit profile"
+                description="Make changes to your profile here. Click save when you're done."
+                onSave={handleSave}
+                onCancel={handleCancel}
+            >
+                <Fieldset gap="$4" horizontal>
+                    <Label width={64} htmlFor="name">
+                        Name
+                    </Label>
+                    <Input flex={1} id="name" defaultValue="Nate Wienert" />
+                </Fieldset>
+            </FormDialog>
         </View>
     );
 }

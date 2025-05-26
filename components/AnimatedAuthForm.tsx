@@ -11,11 +11,11 @@ export default function AnimatedAuthForm({
     children,
     style,
 }: AnimatedAuthFormProps) {
-    const pathname = usePathname(); // dapatkan path route sekarang
+    const pathname = usePathname();
 
     return (
         <Animated.View
-            key={pathname} // paksa remount tiap route berubah
+            key={pathname}
             entering={SlideInDown.delay(300)
                 .springify()
                 .damping(100)

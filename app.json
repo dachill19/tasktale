@@ -23,6 +23,9 @@
             "output": "static",
             "favicon": "./assets/images/logo.png"
         },
+        "updates": {
+            "enabled": false
+        },
         "plugins": [
             "expo-router",
             [
@@ -33,7 +36,8 @@
                     "resizeMode": "contain",
                     "backgroundColor": "#ffffff"
                 }
-            ]
+            ],
+            "expo-web-browser"
         ],
         "experiments": {
             "typedRoutes": true

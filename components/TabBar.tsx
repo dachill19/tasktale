@@ -1,5 +1,5 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutChangeEvent } from "react-native";
 import Animated, {
     useAnimatedStyle,
@@ -27,6 +27,13 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         };
     });
 
+    useEffect(() => {
+        tabPositionX.value = withSpring(buttonWidth * state.index, {
+            damping: 20,
+            stiffness: 200,
+        });
+    }, [state.index, buttonWidth]);
+
     return (
         <YStack position="absolute" bottom={0} width="100%">
             <YStack
@@ -45,7 +52,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                         animatedStyle,
                         {
                             position: "absolute",
-                            backgroundColor: "#388e3c",
+                            backgroundColor: "hsl(152, 57.5%, 37.6%)",
                             borderRadius: 40,
                             marginHorizontal: 8,
                             height: dimensions.height - 20,
@@ -65,9 +72,6 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                     const isFocused = state.index === index;
 
                     const onPress = () => {
-                        tabPositionX.value = withSpring(buttonWidth * index, {
-                            duration: 1500,
-                        });
                         const event = navigation.emit({
                             type: "tabPress",
                             target: route.key,

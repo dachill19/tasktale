@@ -1,10 +1,19 @@
 import { TabBar } from "@/components/TabBar";
-import { Feather } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import React from "react";
+import { Bell, Plus } from "@tamagui/lucide-icons";
+import { router, Tabs } from "expo-router";
+import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Avatar, Button, Image, Text, XStack, YStack } from "tamagui";
+import {
+    Avatar,
+    Button,
+    Image,
+    Sheet,
+    Text,
+    View,
+    XStack,
+    YStack,
+} from "tamagui";
 
 function Header() {
     return (
@@ -27,7 +36,7 @@ function Header() {
                             borderRadius={8}
                         />
                         <Text
-                            fontSize="$7"
+                            fontSize="$8"
                             fontFamily="$display"
                             fontWeight="bold"
                             color="$color10"
@@ -44,7 +53,7 @@ function Header() {
                             size="$3"
                             onPress={() => console.log("Tombol diklik!")}
                         >
-                            <Feather name="bell" size={20} color="#000" />
+                            <Bell size={20} color="#000" />
                             <YStack
                                 position="absolute"
                                 top={2}
@@ -73,17 +82,111 @@ function Header() {
 }
 
 export default function Layout() {
+    const [openSheet, setOpenSheet] = useState(false);
+
     return (
-        <Tabs
-            tabBar={(props) => <TabBar {...props} />}
-            screenOptions={{
-                header: () => <Header />,
-            }}
-        >
-            <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
-            <Tabs.Screen name="tasks" options={{ title: "Tugas" }} />
-            <Tabs.Screen name="journal" options={{ title: "Jurnal" }} />
-            <Tabs.Screen name="analytics" options={{ title: "Analisis" }} />
-        </Tabs>
+        <View flex={1} position="relative">
+            {/* Sheet muncul dari bawah */}
+            <Sheet
+                open={openSheet}
+                onOpenChange={setOpenSheet}
+                modal
+                dismissOnSnapToBottom
+                snapPoints={[30]}
+                animation="medium"
+            >
+                <Sheet.Overlay />
+                <Sheet.Handle />
+                <Sheet.Frame
+                    padding="$4"
+                    gap="$4"
+                    backgroundColor="$background"
+                >
+                    <Text fontSize="$8" fontWeight="bold" color="$green10">
+                        Tambah Baru
+                    </Text>
+                    <Button
+                        size="$5"
+                        bg="$green10"
+                        color="white"
+                        fontSize="$6"
+                        fontWeight="bold"
+                        animation="quick"
+                        pressStyle={{
+                            bg: "$green8",
+                            borderColor: "$green10",
+                            borderWidth: 2,
+                            scale: 0.9,
+                        }}
+                        onPress={() => {
+                            console.log("Tambah Tugas");
+                            setOpenSheet(false);
+                            router.push({
+                                pathname: "/tasks",
+                                params: {
+                                    openDialog: "true",
+                                },
+                            });
+                        }}
+                    >
+                        Add Task
+                    </Button>
+                    <Button
+                        size="$5"
+                        bg="$blue10"
+                        color="white"
+                        fontSize="$6"
+                        fontWeight="bold"
+                        animation="quick"
+                        pressStyle={{
+                            bg: "$blue8",
+                            borderColor: "$blue10",
+                            borderWidth: 2,
+                            scale: 0.9,
+                        }}
+                        onPress={() => {
+                            console.log("Tambah Jurnal");
+                            setOpenSheet(false);
+                            router.push({
+                                pathname: "/journal",
+                                params: {
+                                    openDialog: "true",
+                                },
+                            });
+                        }}
+                    >
+                        Add Journal
+                    </Button>
+                </Sheet.Frame>
+            </Sheet>
+            <Button
+                icon={<Plus size="$3" color="white" />}
+                size="$6"
+                bg="$green10"
+                circular
+                position="absolute"
+                bottom="$14"
+                right="$4"
+                zIndex={999}
+                onPress={() => setOpenSheet(true)}
+                animation="quick"
+                pressStyle={{
+                    bg: "$green8",
+                    scale: 0.9,
+                }}
+            />
+
+            <Tabs
+                tabBar={(props) => <TabBar {...props} />}
+                screenOptions={{
+                    header: () => <Header />,
+                }}
+            >
+                <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
+                <Tabs.Screen name="tasks" options={{ title: "Tugas" }} />
+                <Tabs.Screen name="journal" options={{ title: "Jurnal" }} />
+                <Tabs.Screen name="analytics" options={{ title: "Analisis" }} />
+            </Tabs>
+        </View>
     );
 }
