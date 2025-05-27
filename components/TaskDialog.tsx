@@ -129,10 +129,7 @@ export function TaskDialog({
 
         if (selectedDate) {
             if (deadline) {
-                // Preserve time if already set
                 const newDate = new Date(selectedDate);
-                newDate.setHours(deadline.getHours());
-                newDate.setMinutes(deadline.getMinutes());
                 setDeadline(newDate);
             } else {
                 setDeadline(selectedDate);
