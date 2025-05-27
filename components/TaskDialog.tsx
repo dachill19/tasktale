@@ -515,7 +515,14 @@ export function TaskDialog({
                             <Button
                                 onPress={onCancel}
                                 aria-label="Cancel"
-                                themeInverse
+                                backgroundColor="$green4"
+                                color="black"
+                                animation="quick"
+                                pressStyle={{
+                                    borderWidth: 0,
+                                    bg: "$green4",
+                                    scale: 0.9,
+                                }}
                             >
                                 Cancel
                             </Button>
@@ -524,7 +531,14 @@ export function TaskDialog({
                             <Button
                                 onPress={onSave}
                                 aria-label="Save"
-                                marginRight="$2"
+                                backgroundColor="$green10"
+                                color="white"
+                                animation="quick"
+                                pressStyle={{
+                                    borderWidth: 0,
+                                    bg: "$green10",
+                                    scale: 0.9,
+                                }}
                             >
                                 Save
                             </Button>
