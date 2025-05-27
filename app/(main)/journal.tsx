@@ -53,10 +53,10 @@ const Journal = () => {
     };
 
     const toggleItems = [
-        { value: "all", label: "Semua" },
-        { value: "today", label: "Hari Ini" },
-        { value: "week", label: "Minggu Ini" },
-        { value: "month", label: "Bulan Ini" },
+        { value: "all", label: "All" },
+        { value: "today", label: "Today" },
+        { value: "week", label: "This Week" },
+        { value: "month", label: "This Month" },
     ];
 
     return (
@@ -73,7 +73,7 @@ const Journal = () => {
                 color="$color10"
                 marginVertical="$4"
             >
-                Jurnal Harian
+                Daily Journals
             </Text>
 
             <FilterToggleGroup

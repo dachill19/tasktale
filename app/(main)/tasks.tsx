@@ -113,10 +113,10 @@ const Tasks = () => {
     };
 
     const toggleItems = [
-        { value: "all", label: "Semua" },
-        { value: "active", label: "Aktif" },
-        { value: "done", label: "Selesai" },
-        { value: "today", label: "Hari Ini" },
+        { value: "all", label: "All" },
+        { value: "active", label: "Active" },
+        { value: "done", label: "Done" },
+        { value: "today", label: "Today" },
     ];
 
     return (
@@ -158,7 +158,7 @@ const Tasks = () => {
                 color="$color10"
                 marginVertical="$4"
             >
-                Tugas
+                Tasks
             </Text>
 
             <FilterToggleGroup

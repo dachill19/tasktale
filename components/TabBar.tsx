@@ -40,11 +40,11 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 flexDirection="row"
                 justifyContent="space-between"
                 alignItems="center"
-                backgroundColor="$background" // atau langsung "#fff"
-                paddingVertical="$3" // 15px jika $1 = 4px
+                backgroundColor="$background"
+                paddingVertical="$3"
                 elevation={2}
                 borderTopWidth={2}
-                borderColor="$borderColor" // opsional, bisa custom warna
+                borderColor="$borderColor"
                 onLayout={onTabBarLayout}
             >
                 <Animated.View

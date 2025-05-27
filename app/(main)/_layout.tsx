@@ -183,9 +183,12 @@ export default function Layout() {
                 }}
             >
                 <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
-                <Tabs.Screen name="tasks" options={{ title: "Tugas" }} />
-                <Tabs.Screen name="journal" options={{ title: "Jurnal" }} />
-                <Tabs.Screen name="analytics" options={{ title: "Analisis" }} />
+                <Tabs.Screen name="tasks" options={{ title: "Tasks" }} />
+                <Tabs.Screen name="journal" options={{ title: "Journals" }} />
+                <Tabs.Screen
+                    name="analytics"
+                    options={{ title: "Analytics" }}
+                />
             </Tabs>
         </View>
     );
