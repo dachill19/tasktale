@@ -1,10 +1,10 @@
 import FilterToggleGroup from "@/components/FilterToggleGroup";
-import { FormDialog } from "@/components/FormDialog";
 import TaskCard from "@/components/TaskCard";
+import { TaskDialog } from "@/components/TaskDialog";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList } from "react-native";
-import { Input, Label, Text, YStack } from "tamagui";
+import { Text, YStack } from "tamagui";
 
 const Tasks = () => {
     const [filter, setFilter] = useState("all");
@@ -126,31 +126,12 @@ const Tasks = () => {
             paddingHorizontal="$4"
             alignItems="center"
         >
-            <FormDialog
+            <TaskDialog
                 open={open}
                 onOpenChange={setOpen}
-                title="Add Task"
-                description="Make changes to your profile here. Click save when you're done."
                 onSave={handleSave}
                 onCancel={handleCancel}
-            >
-                <YStack gap="$2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                        width="100%"
-                        id="title"
-                        placeholder="Apa yang perlu dilakukan?"
-                    />
-                </YStack>
-                <YStack gap="$2">
-                    <Label htmlFor="description">Description (optional)</Label>
-                    <Input
-                        width="100%"
-                        id="description"
-                        placeholder="Tambahkan detail..."
-                    />
-                </YStack>
-            </FormDialog>
+            />
             <Text
                 fontSize="$7"
                 fontWeight="bold"

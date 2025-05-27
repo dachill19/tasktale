@@ -1,4 +1,4 @@
-import { Plus, X } from "@tamagui/lucide-icons";
+import { Calendar, Plus, X } from "@tamagui/lucide-icons";
 import React, { useState } from "react";
 import Animated, {
     runOnJS,
@@ -6,7 +6,11 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
-import { Button, Dialog, Input, Label, Text, XStack, YStack } from "tamagui";
+import { Button, Dialog, Input, Text, XStack, YStack } from "tamagui";
+
+// For React Native DateTimePicker
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { FlatList, Platform } from "react-native";
 
 type TaskDialogProps = {
     open: boolean;
@@ -54,14 +58,20 @@ function AnimatedInput({
             <XStack alignItems="center" gap="$2">
                 <Input
                     flex={1}
-                    placeholder={`SubTask ${index + 1}`}
+                    placeholder={`Sub-Task ${index + 1}`}
                     focusStyle={{ borderColor: "$green10" }}
                 />
                 <Button
-                    icon={<X size="$1" color="$red10" />}
-                    size="$2"
+                    icon={<X size={18} color="$red10" />}
+                    size={25}
                     circular
                     backgroundColor="$red7"
+                    animation="quick"
+                    pressStyle={{
+                        borderWidth: 0,
+                        bg: "$red7",
+                        scale: 0.9,
+                    }}
                     onPress={handleRemove}
                 />
             </XStack>
@@ -78,6 +88,15 @@ export function TaskDialog({
     const [subTasks, setSubTasks] = useState<SubTask[]>([]);
     const [nextId, setNextId] = useState(0);
 
+    // Date picker states
+    const [deadline, setDeadline] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+    // Priority state with default medium
+    const [selectedPriority, setSelectedPriority] = useState<
+        "high" | "medium" | "low"
+    >("medium");
+
     const handleAddSubTask = () => {
         setSubTasks((prev) => [...prev, { id: nextId }]);
         setNextId((prev) => prev + 1);
@@ -87,11 +106,59 @@ export function TaskDialog({
         setSubTasks((prev) => prev.filter((subTask) => subTask.id !== id));
     };
 
+    const renderSubTaskItem = ({
+        item,
+        index,
+    }: {
+        item: SubTask;
+        index: number;
+    }) => (
+        <AnimatedInput
+            id={item.id}
+            index={index}
+            onRemove={handleRemoveSubTask}
+        />
+    );
+
+    const keyExtractor = (item: SubTask) => item.id.toString();
+
+    const handleDateChange = (event: any, selectedDate?: Date) => {
+        if (Platform.OS === "android") {
+            setShowDatePicker(false);
+        }
+
+        if (selectedDate) {
+            if (deadline) {
+                // Preserve time if already set
+                const newDate = new Date(selectedDate);
+                newDate.setHours(deadline.getHours());
+                newDate.setMinutes(deadline.getMinutes());
+                setDeadline(newDate);
+            } else {
+                setDeadline(selectedDate);
+            }
+
+            if (Platform.OS === "ios") {
+                setShowDatePicker(false);
+            }
+        }
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
+    };
+
+    const clearDeadline = () => {
+        setDeadline(null);
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <Dialog.Trigger asChild>
-                <Button>Click Me</Button>
-            </Dialog.Trigger>
+            <Dialog.Trigger />
             <Dialog.Portal>
                 <Dialog.Overlay
                     key="overlay"
@@ -127,7 +194,7 @@ export function TaskDialog({
                     ]}
                     enterStyle={{ x: 0, y: 0, opacity: 0, scale: 0.7 }}
                     exitStyle={{ x: 0, y: 0, opacity: 0, scale: 0.7 }}
-                    gap="$2"
+                    gap="$4"
                 >
                     <Dialog.Title
                         fontSize="$8"
@@ -141,37 +208,266 @@ export function TaskDialog({
                         done.
                     </Dialog.Description>
 
-                    <YStack gap="$1">
-                        <Label htmlFor="title">Task Title</Label>
+                    <YStack gap="$2">
+                        <Text fontSize="$5" fontWeight="bold">
+                            Task Title
+                        </Text>
                         <Input
                             width="100%"
                             id="title"
-                            placeholder="Apa yang perlu dilakukan?"
+                            placeholder="What needs to be done?"
                             focusStyle={{ borderColor: "$green10" }}
                         />
                     </YStack>
-                    <YStack gap="$1">
-                        <Label htmlFor="description">
+                    <YStack gap="$2">
+                        <Text fontSize="$5" fontWeight="bold">
                             Description (optional)
-                        </Label>
+                        </Text>
                         <Input
                             width="100%"
                             id="description"
-                            placeholder="Tambahkan detail..."
+                            placeholder="Add details..."
                             focusStyle={{ borderColor: "$green10" }}
                         />
                     </YStack>
-                    <YStack gap="$1">
+                    <YStack gap="$2">
+                        <Text fontSize="$5" fontWeight="bold">
+                            Priority
+                        </Text>
+                        <XStack gap="$2">
+                            <Button
+                                flex={1}
+                                backgroundColor={
+                                    selectedPriority === "high"
+                                        ? "$red8"
+                                        : "$red4"
+                                }
+                                borderWidth={
+                                    selectedPriority === "high" ? 2 : 0
+                                }
+                                borderColor={
+                                    selectedPriority === "high"
+                                        ? "$red10"
+                                        : "transparent"
+                                }
+                                onPress={() => setSelectedPriority("high")}
+                                pressStyle={{
+                                    backgroundColor: "$red8",
+                                    scale: 0.95,
+                                    ...(selectedPriority === "high" && {
+                                        borderColor: "$red10",
+                                        borderWidth: 2,
+                                    }),
+                                }}
+                            >
+                                <XStack alignItems="center" gap="$2">
+                                    <XStack
+                                        width={8}
+                                        height={8}
+                                        backgroundColor="$red10"
+                                        borderRadius={99}
+                                    />
+                                    <Text
+                                        fontSize="$4"
+                                        color={
+                                            selectedPriority === "high"
+                                                ? "white"
+                                                : "$red10"
+                                        }
+                                        fontWeight={
+                                            selectedPriority === "high"
+                                                ? "bold"
+                                                : "normal"
+                                        }
+                                    >
+                                        High
+                                    </Text>
+                                </XStack>
+                            </Button>
+
+                            <Button
+                                flex={1}
+                                backgroundColor={
+                                    selectedPriority === "medium"
+                                        ? "$yellow8"
+                                        : "$yellow4"
+                                }
+                                borderWidth={
+                                    selectedPriority === "medium" ? 2 : 0
+                                }
+                                borderColor={
+                                    selectedPriority === "medium"
+                                        ? "$yellow10"
+                                        : "transparent"
+                                }
+                                onPress={() => setSelectedPriority("medium")}
+                                pressStyle={{
+                                    backgroundColor: "$yellow8",
+                                    scale: 0.95,
+                                    ...(selectedPriority === "medium" && {
+                                        borderColor: "$yellow10",
+                                        borderWidth: 2,
+                                    }),
+                                }}
+                            >
+                                <XStack alignItems="center" gap="$2">
+                                    <XStack
+                                        width={8}
+                                        height={8}
+                                        backgroundColor="$yellow10"
+                                        borderRadius={99}
+                                    />
+                                    <Text
+                                        fontSize="$4"
+                                        color={
+                                            selectedPriority === "medium"
+                                                ? "white"
+                                                : "$yellow10"
+                                        }
+                                        fontWeight={
+                                            selectedPriority === "medium"
+                                                ? "bold"
+                                                : "normal"
+                                        }
+                                    >
+                                        Medium
+                                    </Text>
+                                </XStack>
+                            </Button>
+
+                            <Button
+                                flex={1}
+                                backgroundColor={
+                                    selectedPriority === "low"
+                                        ? "$green8"
+                                        : "$green4"
+                                }
+                                borderWidth={selectedPriority === "low" ? 2 : 0}
+                                borderColor={
+                                    selectedPriority === "low"
+                                        ? "$green10"
+                                        : "transparent"
+                                }
+                                onPress={() => setSelectedPriority("low")}
+                                pressStyle={{
+                                    backgroundColor: "$green8",
+                                    scale: 0.95,
+                                    ...(selectedPriority === "low" && {
+                                        borderColor: "$green10",
+                                        borderWidth: 2,
+                                    }),
+                                }}
+                            >
+                                <XStack
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    gap="$2"
+                                >
+                                    <XStack
+                                        width={8}
+                                        height={8}
+                                        backgroundColor="$green10"
+                                        borderRadius={99}
+                                    />
+                                    <Text
+                                        fontSize="$4"
+                                        color={
+                                            selectedPriority === "low"
+                                                ? "white"
+                                                : "$green10"
+                                        }
+                                        fontWeight={
+                                            selectedPriority === "low"
+                                                ? "bold"
+                                                : "normal"
+                                        }
+                                    >
+                                        Low
+                                    </Text>
+                                </XStack>
+                            </Button>
+                        </XStack>
+                    </YStack>
+
+                    {/* Deadline Section */}
+                    <YStack gap="$2">
                         <XStack
                             justifyContent="space-between"
                             alignItems="center"
                         >
-                            <Text>SubTask:</Text>
+                            <Text fontSize="$5" fontWeight="bold">
+                                Deadline
+                            </Text>
+                            {deadline && (
+                                <Button
+                                    icon={<X size={18} color="$red10" />}
+                                    size={25}
+                                    circular
+                                    backgroundColor="$red7"
+                                    animation="quick"
+                                    pressStyle={{
+                                        borderWidth: 0,
+                                        bg: "$red7",
+                                        scale: 0.9,
+                                    }}
+                                    onPress={clearDeadline}
+                                />
+                            )}
+                        </XStack>
+
+                        {deadline ? (
+                            <YStack gap="$2">
+                                <XStack>
+                                    <Button
+                                        flex={1}
+                                        icon={<Calendar size="$1" />}
+                                        backgroundColor="$blue8"
+                                        color="white"
+                                        animation="quick"
+                                        pressStyle={{
+                                            borderColor: "$blue8",
+                                            borderWidth: 2,
+                                            backgroundColor: "$blue8",
+                                            scale: 0.95,
+                                        }}
+                                        onPress={() => setShowDatePicker(true)}
+                                    >
+                                        {formatDate(deadline)}
+                                    </Button>
+                                </XStack>
+                            </YStack>
+                        ) : (
                             <Button
-                                icon={<Plus size="$1" color="white" />}
+                                icon={<Calendar size="$1" />}
+                                backgroundColor="$gray8"
+                                color="white"
+                                animation="quick"
+                                pressStyle={{
+                                    borderColor: "$gray8",
+                                    borderWidth: 2,
+                                    backgroundColor: "$gray8",
+                                    scale: 0.95,
+                                }}
+                                onPress={() => setShowDatePicker(true)}
+                            >
+                                Set Deadline
+                            </Button>
+                        )}
+                    </YStack>
+
+                    <YStack gap="$2">
+                        <XStack
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
+                            <Text fontSize="$5" fontWeight="bold">
+                                Sub-Task:
+                            </Text>
+                            <Button
+                                icon={<Plus size={18} color="white" />}
                                 bg="$green8"
                                 circular
-                                size="$2"
+                                size={25}
                                 borderWidth={0}
                                 animation="quick"
                                 pressStyle={{
@@ -182,19 +478,36 @@ export function TaskDialog({
                                 onPress={handleAddSubTask}
                             />
                         </XStack>
-                        {/* Tombol Plus */}
 
-                        {/* Input dinamis */}
-                        <YStack gap="$1">
-                            {subTasks.map((subTask, idx) => (
-                                <AnimatedInput
-                                    key={subTask.id}
-                                    id={subTask.id}
-                                    index={idx}
-                                    onRemove={handleRemoveSubTask}
+                        {/* Scrollable SubTasks Container */}
+                        {subTasks.length > 0 && (
+                            <YStack maxHeight={150}>
+                                <FlatList
+                                    data={subTasks}
+                                    renderItem={renderSubTaskItem}
+                                    keyExtractor={keyExtractor}
+                                    showsVerticalScrollIndicator={false}
+                                    removeClippedSubviews={true}
+                                    maxToRenderPerBatch={10}
+                                    windowSize={10}
+                                    initialNumToRender={5}
                                 />
-                            ))}
-                        </YStack>
+                            </YStack>
+                        )}
+
+                        {subTasks.length === 0 && (
+                            <XStack
+                                justifyContent="center"
+                                alignItems="center"
+                                backgroundColor="$gray8"
+                                borderRadius={8}
+                                height="$4"
+                            >
+                                <Text color="white" fontSize="$4">
+                                    There are no sub-tasks yet. Click + to add.
+                                </Text>
+                            </XStack>
+                        )}
                     </YStack>
 
                     <XStack justifyContent="flex-end" gap="$2">
@@ -219,6 +532,17 @@ export function TaskDialog({
                     </XStack>
                 </Dialog.Content>
             </Dialog.Portal>
+
+            {/* Date Picker */}
+            {showDatePicker && (
+                <DateTimePicker
+                    value={deadline || new Date()}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleDateChange}
+                    minimumDate={new Date()}
+                />
+            )}
         </Dialog>
     );
 }

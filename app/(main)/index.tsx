@@ -1,7 +1,6 @@
-import { FormDialog } from "@/components/FormDialog";
 import { supabase } from "@/utils/supabase";
 import React, { useEffect, useState } from "react";
-import { Fieldset, Input, Label, Text, View } from "tamagui";
+import { Text, View } from "tamagui";
 
 export default function App() {
     const [data, setData] = useState<any[]>([]);
@@ -43,21 +42,6 @@ export default function App() {
             {data.map((item, index) => (
                 <Text key={index}>{JSON.stringify(item)}</Text>
             ))}
-            <FormDialog
-                open={open}
-                onOpenChange={setOpen}
-                title="Edit profile"
-                description="Make changes to your profile here. Click save when you're done."
-                onSave={handleSave}
-                onCancel={handleCancel}
-            >
-                <Fieldset gap="$4" horizontal>
-                    <Label width={64} htmlFor="name">
-                        Name
-                    </Label>
-                    <Input flex={1} id="name" defaultValue="Nate Wienert" />
-                </Fieldset>
-            </FormDialog>
         </View>
     );
 }
