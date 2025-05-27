@@ -21,6 +21,7 @@
         "@tamagui/babel-plugin": "^1.126.13",
         "@tamagui/config": "^1.126.13",
         "@tamagui/lucide-icons": "^1.126.13",
+        "date-fns": "^4.1.0",
         "expo": "~53.0.9",
         "expo-auth-session": "^6.1.5",
         "expo-blur": "~14.1.4",
