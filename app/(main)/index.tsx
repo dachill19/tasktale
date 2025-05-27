@@ -1,35 +1,22 @@
-// app/dashboard.tsx
-import DashboardCard from "@/components/DashboardCard";
-import { format } from "date-fns";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
-import { H2, Text, YStack } from "tamagui";
+import React, { useEffect, useState } from "react";
+import { Text } from "tamagui";
 
-type TaskPriority = "high" | "medium" | "low";
+export default function App() {
+    const [data, setData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: TaskPriority;
-  dueDate: string;
-}
+    const handleSave = () => {
+        // Logic simpan data
+        console.log("Save clicked");
+        setOpen(false);
+    };
 
-interface JournalEntry {
-  id: string;
-  date: string;
-  mood: string;
-  content: string;
-  hasMedia: boolean;
-}
-
-const Dashboard = () => {
-  const today = new Date();
-  const router = useRouter();
-  const [greeting, setGreeting] = useState("");
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+    const handleCancel = () => {
+        console.log("Cancel clicked");
+        setOpen(false);
+    };
 
   useEffect(() => {
     const hours = today.getHours();
