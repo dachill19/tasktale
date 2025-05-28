@@ -1,5 +1,5 @@
 import { Calendar, Plus, X } from "@tamagui/lucide-icons";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Animated, {
     runOnJS,
     useAnimatedStyle,
@@ -12,11 +12,16 @@ import { Button, Dialog, Input, Text, XStack, YStack } from "tamagui";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { FlatList, Platform } from "react-native";
 
+// Database integration imports
+import { supabase } from "../utils/supabase";
+import { createTask, TaskFormData } from "../utils/task";
+
 type TaskDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: () => void;
     onCancel?: () => void;
+    onTaskCreated?: (task: any) => void;
 };
 
 type SubTask = {
@@ -27,10 +32,12 @@ function AnimatedInput({
     id,
     index,
     onRemove,
+    onChange,
 }: {
     id: number;
     index: number;
     onRemove: (id: number) => void;
+    onChange: (id: number, value: string) => void;
 }) {
     const height = useSharedValue(0);
     const opacity = useSharedValue(0);
@@ -60,6 +67,7 @@ function AnimatedInput({
                     flex={1}
                     placeholder={`Sub-Task ${index + 1}`}
                     focusStyle={{ borderColor: "$green10" }}
+                    onChangeText={(text) => onChange(id, text)}
                 />
                 <Button
                     icon={<X size={18} color="$red10" />}
@@ -84,18 +92,26 @@ export function TaskDialog({
     onOpenChange,
     onSave,
     onCancel,
+    onTaskCreated,
 }: TaskDialogProps) {
+    // Existing state
     const [subTasks, setSubTasks] = useState<SubTask[]>([]);
     const [nextId, setNextId] = useState(0);
-
-    // Date picker states
     const [deadline, setDeadline] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    // Priority state with default medium
     const [selectedPriority, setSelectedPriority] = useState<
         "high" | "medium" | "low"
     >("medium");
+
+    // New state for form handling and database integration
+    const [taskTitle, setTaskTitle] = useState('');
+    const [taskDescription, setTaskDescription] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const subTaskRefs = useRef<{ [key: number]: string }>({});
+
+    const handleSubTaskChange = (id: number, value: string) => {
+        subTaskRefs.current[id] = value;
+    };
 
     const handleAddSubTask = () => {
         setSubTasks((prev) => [...prev, { id: nextId }]);
@@ -104,6 +120,8 @@ export function TaskDialog({
 
     const handleRemoveSubTask = (id: number) => {
         setSubTasks((prev) => prev.filter((subTask) => subTask.id !== id));
+        // Clean up the ref for removed subtask
+        delete subTaskRefs.current[id];
     };
 
     const renderSubTaskItem = ({
@@ -117,6 +135,7 @@ export function TaskDialog({
             id={item.id}
             index={index}
             onRemove={handleRemoveSubTask}
+            onChange={handleSubTaskChange}
         />
     );
 
@@ -151,6 +170,78 @@ export function TaskDialog({
 
     const clearDeadline = () => {
         setDeadline(null);
+    };
+
+    const handleSave = async () => {
+        if (!taskTitle.trim()) {
+            alert('Please enter a task title');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) {
+                alert('Please login first');
+                setIsLoading(false);
+                return;
+            }
+
+            const subTasksData = subTasks
+                .map(subTask => ({
+                    title: subTaskRefs.current[subTask.id] || ''
+                }))
+                .filter(subTask => subTask.title.trim() !== '');
+
+            const taskData: TaskFormData = {
+                title: taskTitle.trim(),
+                description: taskDescription.trim() || undefined,
+                priority: selectedPriority,
+                deadline: deadline,
+                subTasks: subTasksData,
+            };
+
+            const result = await createTask(taskData, user.id);
+
+            if (result.success) {
+                // Reset form
+                setTaskTitle('');
+                setTaskDescription('');
+                setSelectedPriority('medium');
+                setDeadline(null);
+                setSubTasks([]);
+                setNextId(0);
+                subTaskRefs.current = {};
+
+                if (onTaskCreated && result.data) {
+                    onTaskCreated(result.data);
+                }
+
+                onOpenChange(false);
+                if (onSave) onSave();
+                alert('Task created successfully!');
+            } else {
+                alert(`Failed to create task: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error saving task:', error);
+            alert('An unexpected error occurred');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setTaskTitle('');
+        setTaskDescription('');
+        setSelectedPriority('medium');
+        setDeadline(null);
+        setSubTasks([]);
+        setNextId(0);
+        subTaskRefs.current = {};
+        if (onCancel) onCancel();
     };
 
     return (
@@ -214,6 +305,8 @@ export function TaskDialog({
                             id="title"
                             placeholder="What needs to be done?"
                             focusStyle={{ borderColor: "$green10" }}
+                            value={taskTitle}
+                            onChangeText={setTaskTitle}
                         />
                     </YStack>
                     <YStack gap="$2">
@@ -225,6 +318,8 @@ export function TaskDialog({
                             id="description"
                             placeholder="Add details..."
                             focusStyle={{ borderColor: "$green10" }}
+                            value={taskDescription}
+                            onChangeText={setTaskDescription}
                         />
                     </YStack>
                     <YStack gap="$2">
@@ -510,7 +605,7 @@ export function TaskDialog({
                     <XStack justifyContent="flex-end" gap="$2">
                         <Dialog.Close asChild>
                             <Button
-                                onPress={onCancel}
+                                onPress={handleCancel}
                                 aria-label="Cancel"
                                 backgroundColor="$green4"
                                 color="black"
@@ -520,13 +615,14 @@ export function TaskDialog({
                                     bg: "$green4",
                                     scale: 0.9,
                                 }}
+                                disabled={isLoading}
                             >
                                 Cancel
                             </Button>
                         </Dialog.Close>
                         <Dialog.Close asChild>
                             <Button
-                                onPress={onSave}
+                                onPress={handleSave}
                                 aria-label="Save"
                                 backgroundColor="$green10"
                                 color="white"
@@ -536,8 +632,10 @@ export function TaskDialog({
                                     bg: "$green10",
                                     scale: 0.9,
                                 }}
+                                disabled={isLoading}
+                                opacity={isLoading ? 0.6 : 1}
                             >
-                                Save
+                                {isLoading ? 'Saving...' : 'Save'}
                             </Button>
                         </Dialog.Close>
                     </XStack>
