@@ -1,4 +1,4 @@
-import { createTask, getCurrentUserId, TaskFormData } from "@/lib/task";
+import { createTask, getCurrentUserId, TaskFormData, TaskWithSubTasks, updateTask } from "@/lib/task";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar, Plus, X } from "@tamagui/lucide-icons";
 import React, { useCallback, useMemo, useReducer } from "react";
@@ -48,6 +48,7 @@ interface TaskDialogProps {
     onSave?: () => void;
     onCancel?: () => void;
     onTaskCreated?: (task: any) => void;
+    taskToEdit?: TaskWithSubTasks;
 }
 
 // ===== REDUCER =====
@@ -270,6 +271,7 @@ export function TaskDialog({
     onSave,
     onCancel,
     onTaskCreated,
+    taskToEdit,
 }: TaskDialogProps) {
     const [state, dispatch] = useReducer(taskFormReducer, initialState);
 
@@ -302,17 +304,31 @@ export function TaskDialog({
                 subTasks: validSubTasks,
             };
 
-            const result = await createTask(taskData, userResult.data);
+            let success = false;
+            let errorMsg = "";
 
-            if (result.success && result.data) {
+            if (taskToEdit?.id) {
+                const result = await updateTask(taskToEdit.id, taskData);
+                success = result.success;
+                errorMsg = result.error || "Failed to update task";
+            } else {
+                const result = await createTask(taskData, userResult.data);
+                success = result.success;
+                errorMsg = result.error || "Failed to create task";
+                if (success) {
+                    onTaskCreated?.(result.data);
+                }
+            }
+
+            if (success) {
                 dispatch({ type: "RESET_FORM" });
-                onTaskCreated?.(result.data);
                 onOpenChange(false);
                 onSave?.();
-                showAlert("Success", "Task created successfully!");
+                showAlert("Success", taskToEdit ? "Task updated!" : "Task created!");
             } else {
-                showAlert("Error", result.error || "Failed to create task");
+                showAlert("Error", errorMsg);
             }
+
         } catch (error) {
             console.error("Error saving task:", error);
             showAlert("Error", "An unexpected error occurred");
@@ -354,6 +370,52 @@ export function TaskDialog({
     const handlePrioritySelect = useCallback((priority: Priority) => {
         dispatch({ type: "SET_PRIORITY", payload: priority });
     }, []);
+
+    React.useEffect(() => {
+        console.log("taskToEdit changed:", taskToEdit);
+        
+        if (taskToEdit) {
+            dispatch({ type: "RESET_FORM" });
+            
+            dispatch({ type: "SET_TITLE", payload: taskToEdit.title });
+            dispatch({ type: "SET_DESCRIPTION", payload: taskToEdit.description ?? "" });
+            dispatch({ type: "SET_PRIORITY", payload: taskToEdit.priority });
+            
+            if (taskToEdit.deadline) {
+                let deadlineDate: Date | null = null;
+                
+                try {
+                    const parsed = new Date(taskToEdit.deadline);
+                    if (!isNaN(parsed.getTime())) {
+                        deadlineDate = parsed;
+                    } else {
+                        console.warn("Could not parse deadline:", taskToEdit.deadline);
+                    }
+                } catch (error) {
+                    console.warn("Error parsing deadline:", taskToEdit.deadline, error);
+                }
+                
+                if (deadlineDate) {
+                    dispatch({ type: "SET_DEADLINE", payload: deadlineDate });
+                }
+            }
+
+            if (taskToEdit.sub_tasks && taskToEdit.sub_tasks.length > 0) {
+                let nextId = 0;
+                
+                taskToEdit.sub_tasks.forEach((st) => {
+                    dispatch({ type: "ADD_SUBTASK" });
+                    dispatch({ 
+                        type: "UPDATE_SUBTASK", 
+                        payload: { id: nextId, title: st.title } 
+                    });
+                    nextId++;
+                });
+            }
+        } else {
+            dispatch({ type: "RESET_FORM" });
+        }
+    }, [taskToEdit, open]);
 
     // ===== MEMOIZED VALUES =====
     const priorityButtons = useMemo(
@@ -418,17 +480,23 @@ export function TaskDialog({
                     enterStyle={{ opacity: 0, scale: 0.7 }}
                     exitStyle={{ opacity: 0, scale: 0.7 }}
                     gap="$4"
+                    width="90%"
+                    maxWidth={400}
+                    minHeight={600}
+                    maxHeight="85%"
+                    alignSelf="center"
                 >
-                    <Dialog.Title
-                        fontSize="$8"
-                        fontWeight="bold"
-                        color="$green10"
-                    >
-                        Add Task
+                    <Dialog.Title 
+                    fontSize="$8" 
+                    fontWeight="bold" 
+                    color="$green10">
+                    {taskToEdit ? "Edit Task" : "Add Task"}
                     </Dialog.Title>
 
                     <Dialog.Description>
-                        Create a new task with optional sub-tasks and deadline.
+                        {taskToEdit
+                            ? "Update your task details below."
+                            : "Create a new task with optional sub-tasks and deadline."}
                     </Dialog.Description>
 
                     {/* Title Input */}
@@ -606,30 +674,33 @@ export function TaskDialog({
                             </Button>
                         </Dialog.Close>
                         <Button
-                            onPress={handleSave}
-                            backgroundColor="$green10"
-                            color="white"
-                            animation="quick"
-                            pressStyle={{
-                                borderWidth: 0,
-                                bg: "$green10",
-                                scale: 0.9,
-                            }}
-                            disabled={
-                                state.isLoading ||
-                                !state.title.trim() ||
-                                !state.deadline
-                            }
-                            opacity={
-                                state.isLoading ||
-                                !state.title.trim() ||
-                                !state.deadline
-                                    ? 0.6
-                                    : 1
-                            }
-                        >
-                            {state.isLoading ? "Creating..." : "Create Task"}
-                        </Button>
+    onPress={handleSave}
+    backgroundColor="$green10"
+    color="white"
+    animation="quick"
+    pressStyle={{
+        borderWidth: 0,
+        bg: "$green10",
+        scale: 0.9,
+    }}
+    disabled={
+        state.isLoading ||
+        !state.title.trim() ||
+        !state.deadline
+    }
+    opacity={
+        state.isLoading ||
+        !state.title.trim() ||
+        !state.deadline
+            ? 0.6
+            : 1
+    }
+>
+    {state.isLoading 
+        ? (taskToEdit ? "Updating..." : "Creating...") 
+        : (taskToEdit ? "Update Task" : "Create Task")
+    }
+            </Button>
                     </XStack>
                 </Dialog.Content>
             </Dialog.Portal>

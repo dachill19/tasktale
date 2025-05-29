@@ -273,6 +273,7 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
             : task.created_at
             ? formatDate(task.created_at)
             : "No date",
+        originalDeadline: task.deadline,
         completedCount: totalSubTasks > 0 ? completedSubTasks : undefined,
         totalCount: totalSubTasks > 0 ? totalSubTasks : undefined,
         subTasks: task.sub_tasks?.map((st) => ({
@@ -281,6 +282,7 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
             completed: st.completed,
         })),
         completed: task.completed,
+        originalPriority: task.priority,
     };
 };
 
@@ -320,4 +322,64 @@ export const getTaskStats = async (
             error: handleError(error, "Getting task stats"),
         };
     }
+};
+
+// ===== EDIT =====
+export const updateTask = async (
+  taskId: string,
+  taskData: TaskFormData
+): Promise<ServiceResponse<void>> => {
+  try {
+    // uodate
+    const { error: taskError } = await supabase
+      .from("tasks")
+      .update({
+        title: taskData.title,
+        description: taskData.description || null,
+        priority: taskData.priority,
+        deadline: taskData.deadline?.toISOString() || null,
+      })
+      .eq("id", taskId);
+
+    if (taskError) return { success: false, error: taskError.message };
+
+    // delete subtask lama
+    const { error: deleteError } = await supabase
+      .from("sub_tasks")
+      .delete()
+      .eq("task_id", taskId);
+
+    if (deleteError) {
+      return {
+        success: false,
+        error: `Task updated but failed to clear old sub-tasks: ${deleteError.message}`,
+      };
+    }
+
+    // nambahin sub task
+    const validSubTasks = taskData.subTasks
+      .filter((st) => st.title.trim())
+      .map((st) => ({
+        task_id: taskId,
+        title: st.title.trim(),
+        completed: false,
+      }));
+
+    if (validSubTasks.length > 0) {
+      const { error: insertError } = await supabase
+        .from("sub_tasks")
+        .insert(validSubTasks);
+
+      if (insertError) {
+        return {
+          success: false,
+          error: `Task updated but failed to insert sub-tasks: ${insertError.message}`,
+        };
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Unexpected error during update" };
+  }
 };

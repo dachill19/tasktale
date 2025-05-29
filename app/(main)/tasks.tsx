@@ -97,10 +97,51 @@ const Tasks = () => {
         setIsRefreshing(false);
     };
 
+    const [taskToEdit, setTaskToEdit] = useState<TaskWithSubTasks | undefined>(undefined); 
+
     const handleEdit = (id: string) => {
-        // TODO: Implement edit functionality
-        console.log("Edit task:", id);
-        // Bisa buka dialog edit atau navigate ke edit screen
+        const task = tasks.find((t) => t.id === id);
+        if (task) {
+            let parsedDeadline = null;
+            
+            if ((task as any).originalDeadline) {
+                try {
+                    parsedDeadline = new Date((task as any).originalDeadline);
+                    if (isNaN(parsedDeadline.getTime())) {
+                        parsedDeadline = null;
+                    }
+                } catch (error) {
+                    console.warn("Error parsing originalDeadline:", error);
+                    parsedDeadline = null;
+                }
+            } else if (task.deadline && task.deadline !== "No date") {
+                try {
+                    parsedDeadline = new Date(task.deadline);
+                    if (isNaN(parsedDeadline.getTime())) {
+                        parsedDeadline = null;
+                    }
+                } catch (error) {
+                    console.warn("Error parsing formatted deadline:", error);
+                    parsedDeadline = null;
+                }
+            }
+
+            setTaskToEdit({
+                id: task.id,
+                title: task.title,
+                description: task.description || "",
+                priority: (task as any).originalPriority || task.priority.toLowerCase() as "high" | "medium" | "low",
+                completed: task.completed,
+                deadline: parsedDeadline ? parsedDeadline.toISOString() : null, // Simpan sebagai ISO string
+                sub_tasks: task.subTasks?.map((st: any) => ({
+                    id: st.id!,
+                    title: st.title,
+                    completed: st.completed,
+                    task_id: task.id,
+                })) || [],
+            });
+            setOpen(true);
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -288,10 +329,14 @@ const Tasks = () => {
         >
             <TaskDialog
                 open={open}
-                onOpenChange={setOpen}
+                onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+                    if (!isOpen) setTaskToEdit(undefined); // reset saat dialog ditutup
+                }}
                 onSave={handleSave}
                 onCancel={handleCancel}
                 onTaskCreated={handleTaskCreated}
+                taskToEdit={taskToEdit}
             />
 
             <Text
