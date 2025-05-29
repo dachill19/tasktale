@@ -9,8 +9,8 @@ import {
     TaskWithSubTasks,
     transformTaskForCard,
     updateSubTaskStatus,
-    updateTaskStatus
-} from "@/utils/task";
+    updateTaskStatus,
+} from "@/lib/task";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, RefreshControl } from "react-native";
@@ -20,7 +20,7 @@ const Tasks = () => {
     const [filter, setFilter] = useState("all");
     const params = useLocalSearchParams();
     const [open, setOpen] = useState(false);
-    
+
     // State untuk data dari Supabase
     const [tasks, setTasks] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -57,10 +57,11 @@ const Tasks = () => {
 
     const initializeUser = async () => {
         const result = await getCurrentUserId();
-        if (result.success && result.userId) {
-            setCurrentUserId(result.userId);
+        if (result.success && result.data) {
+            // Fixed: result.userId -> result.data
+            setCurrentUserId(result.data);
         } else {
-            Alert.alert('Error', 'Please login to view tasks');
+            Alert.alert("Error", "Please login to view tasks");
             // Redirect ke login jika perlu
             // router.replace('/login');
         }
@@ -72,18 +73,18 @@ const Tasks = () => {
         try {
             setIsLoading(true);
             const result = await getFilteredTasks(currentUserId, filter as any);
-            
+
             if (result.success && result.data) {
                 // Transform data untuk TaskCard
                 const transformedTasks = result.data.map(transformTaskForCard);
                 setTasks(transformedTasks);
             } else {
-                Alert.alert('Error', result.error || 'Failed to load tasks');
+                Alert.alert("Error", result.error || "Failed to load tasks");
                 setTasks([]);
             }
         } catch (error) {
-            console.error('Error loading tasks:', error);
-            Alert.alert('Error', 'An unexpected error occurred');
+            console.error("Error loading tasks:", error);
+            Alert.alert("Error", "An unexpected error occurred");
             setTasks([]);
         } finally {
             setIsLoading(false);
@@ -98,30 +99,35 @@ const Tasks = () => {
 
     const handleEdit = (id: string) => {
         // TODO: Implement edit functionality
-        console.log('Edit task:', id);
+        console.log("Edit task:", id);
         // Bisa buka dialog edit atau navigate ke edit screen
     };
 
     const handleDelete = async (id: string) => {
         Alert.alert(
-            'Delete Task',
-            'Are you sure you want to delete this task?',
+            "Delete Task",
+            "Are you sure you want to delete this task?",
             [
                 {
-                    text: 'Cancel',
-                    style: 'cancel',
+                    text: "Cancel",
+                    style: "cancel",
                 },
                 {
-                    text: 'Delete',
-                    style: 'destructive',
+                    text: "Delete",
+                    style: "destructive",
                     onPress: async () => {
                         const result = await deleteTask(id);
                         if (result.success) {
                             // Remove dari state lokal
-                            setTasks(prev => prev.filter(task => task.id !== id));
-                            Alert.alert('Success', 'Task deleted successfully');
+                            setTasks((prev) =>
+                                prev.filter((task) => task.id !== id)
+                            );
+                            Alert.alert("Success", "Task deleted successfully");
                         } else {
-                            Alert.alert('Error', result.error || 'Failed to delete task');
+                            Alert.alert(
+                                "Error",
+                                result.error || "Failed to delete task"
+                            );
                         }
                     },
                 },
@@ -132,57 +138,102 @@ const Tasks = () => {
     const handleToggleComplete = async (id: string, completed: boolean) => {
         try {
             const result = await updateTaskStatus(id, completed);
-            if (result.success) {
-                // Update state lokal
-                setTasks(prev => 
-                    prev.map(task => 
-                        task.id === id ? { ...task, completed } : task
-                    )
-                );
-            } else {
-                Alert.alert('Error', result.error || 'Failed to update task');
-            }
-        } catch (error) {
-            console.error('Error updating task:', error);
-            Alert.alert('Error', 'An unexpected error occurred');
-        }
-    };
 
-        const handleToggleSubTask = async (subTaskId: string, completed: boolean) => {
-        try {
-            const result = await updateSubTaskStatus(subTaskId, completed);
             if (result.success) {
+                // Cari task yang sedang diubah
+                const currentTask = tasks.find((task) => task.id === id);
+
+                // Update semua subtasks jika ada
+                if (currentTask?.subTasks) {
+                    for (const subTask of currentTask.subTasks) {
+                        await updateSubTaskStatus(subTask.id, completed);
+                    }
+                }
+
                 // Update state lokal
-                setTasks(prev => 
-                    prev.map(task => {
-                        if (!task.subTasks) return task;
-                        
-                        // Update subtask dengan type assertion
-                        const updatedSubTasks = task.subTasks.map((subTask: SubTask) => 
-                            subTask.id === subTaskId 
-                                ? { ...subTask, completed } 
-                                : subTask
+                setTasks((prev) =>
+                    prev.map((task) => {
+                        if (task.id !== id) return task;
+
+                        const updatedSubTasks = task.subTasks?.map(
+                            (sub: SubTask) => ({
+                                ...sub,
+                                completed,
+                            })
                         );
-                        
+
                         // Hitung ulang completedCount
-                        const newCompletedCount = updatedSubTasks.filter((st: SubTask) => st.completed).length;
-                        
+                        const newCompletedCount = updatedSubTasks?.filter(
+                            (st: SubTask) => st.completed
+                        ).length;
+
                         return {
                             ...task,
+                            completed,
                             subTasks: updatedSubTasks,
-                            completedCount: updatedSubTasks.length > 0 ? newCompletedCount : undefined
+                            completedCount:
+                                updatedSubTasks?.length > 0
+                                    ? newCompletedCount
+                                    : undefined,
                         };
                     })
                 );
             } else {
-                Alert.alert('Error', result.error || 'Failed to update subtask');
+                Alert.alert("Error", result.error || "Failed to update task");
             }
         } catch (error) {
-            console.error('Error updating subtask:', error);
-            Alert.alert('Error', 'An unexpected error occurred');
+            console.error("Error updating task:", error);
+            Alert.alert("Error", "An unexpected error occurred");
         }
     };
-    
+
+    const handleToggleSubTask = async (
+        subTaskId: string,
+        completed: boolean
+    ) => {
+        try {
+            const result = await updateSubTaskStatus(subTaskId, completed);
+            if (result.success) {
+                // Update state lokal
+                setTasks((prev) =>
+                    prev.map((task) => {
+                        if (!task.subTasks) return task;
+
+                        // Update subtask dengan type assertion
+                        const updatedSubTasks = task.subTasks.map(
+                            (subTask: SubTask) =>
+                                subTask.id === subTaskId
+                                    ? { ...subTask, completed }
+                                    : subTask
+                        );
+
+                        // Hitung ulang completedCount
+                        const newCompletedCount = updatedSubTasks.filter(
+                            (st: SubTask) => st.completed
+                        ).length;
+
+                        return {
+                            ...task,
+                            subTasks: updatedSubTasks,
+                            completedCount:
+                                updatedSubTasks.length > 0
+                                    ? newCompletedCount
+                                    : undefined,
+                        };
+                    })
+                );
+            } else {
+                Alert.alert(
+                    "Error",
+                    result.error || "Failed to update subtask"
+                );
+            }
+        } catch (error) {
+            console.error("Error updating subtask:", error);
+            Alert.alert("Error", "An unexpected error occurred");
+        }
+    };
+
     const handleSave = () => {
         console.log("Task saved");
         setOpen(false);
@@ -196,10 +247,10 @@ const Tasks = () => {
     };
 
     const handleTaskCreated = (newTask: TaskWithSubTasks) => {
-        console.log('New task created:', newTask);
+        console.log("New task created:", newTask);
         // Transform dan tambahkan ke state lokal
         const transformedTask = transformTaskForCard(newTask);
-        setTasks(prev => [transformedTask, ...prev]);
+        setTasks((prev) => [transformedTask, ...prev]);
     };
 
     const toggleItems = [
@@ -218,6 +269,7 @@ const Tasks = () => {
                 paddingHorizontal="$4"
                 alignItems="center"
                 justifyContent="center"
+                paddingBottom={100}
             >
                 <Text fontSize="$5" color="$color10">
                     Loading tasks...
@@ -232,6 +284,7 @@ const Tasks = () => {
             backgroundColor="$background"
             paddingHorizontal="$4"
             alignItems="center"
+            paddingBottom={100}
         >
             <TaskDialog
                 open={open}
@@ -240,9 +293,9 @@ const Tasks = () => {
                 onCancel={handleCancel}
                 onTaskCreated={handleTaskCreated}
             />
-            
+
             <Text
-                fontSize="$7"
+                fontSize="$8"
                 fontWeight="bold"
                 fontFamily="$display"
                 color="$color10"
@@ -265,10 +318,9 @@ const Tasks = () => {
                     gap="$4"
                 >
                     <Text fontSize="$5" color="$color8" textAlign="center">
-                        {filter === 'all' 
-                            ? 'No tasks yet. Create your first task!' 
-                            : `No ${filter} tasks found.`
-                        }
+                        {filter === "all"
+                            ? "No tasks yet. Create your first task!"
+                            : `No ${filter} tasks found.`}
                     </Text>
                     <Button
                         backgroundColor="$green10"
@@ -282,13 +334,15 @@ const Tasks = () => {
                 <FlatList
                     data={tasks}
                     keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={{ paddingBottom: 100, width: "100%" }}
+                    contentContainerStyle={{
+                        width: "100%",
+                    }}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
                             refreshing={isRefreshing}
                             onRefresh={handleRefresh}
-                            colors={['#10b981']} // Green color
+                            colors={["#10b981"]} // Green color
                         />
                     }
                     renderItem={({ item }) => (
@@ -296,14 +350,14 @@ const Tasks = () => {
                             title={item.title}
                             description={item.description}
                             priority={item.priority}
-                            date={item.date}
+                            deadline={item.deadline}
                             completedCount={item.completedCount}
                             totalCount={item.totalCount}
                             subTasks={item.subTasks}
                             completed={item.completed}
                             onEdit={() => handleEdit(item.id)}
                             onDelete={() => handleDelete(item.id)}
-                            onToggleComplete={(completed) => 
+                            onToggleComplete={(completed) =>
                                 handleToggleComplete(item.id, completed)
                             }
                             onToggleSubTask={handleToggleSubTask}

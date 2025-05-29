@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView } from "react-native";
-import { H2, Text, YStack } from "tamagui";
+import { Text, YStack } from "tamagui";
 
 type TaskPriority = "high" | "medium" | "low";
 
@@ -32,9 +32,9 @@ const Dashboard = () => {
 
     useEffect(() => {
         const hours = today.getHours();
-        if (hours < 12) setGreeting("Selamat Pagi");
-        else if (hours < 17) setGreeting("Selamat Siang");
-        else setGreeting("Selamat Malam");
+        if (hours >= 4 && hours < 12) setGreeting("Good Morning");
+        else if (hours >= 12 && hours < 17) setGreeting("Good Afternoon");
+        else setGreeting("Good Evening");
 
         setTasks([
             {
@@ -176,17 +176,22 @@ const Dashboard = () => {
     };
 
     return (
-        <YStack flex={1} backgroundColor="$background" paddingHorizontal="$4">
+        <YStack
+            flex={1}
+            backgroundColor="$background"
+            paddingHorizontal="$4"
+            alignItems="center"
+        >
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 100 }}
             >
-                <YStack gap="$4" paddingTop="$4">
+                <YStack>
                     {/* Header Greeting */}
-                    <YStack alignItems="center" paddingVertical="$2">
-                        <H2 fontSize="$8" fontWeight="bold" color="$color12">
+                    <YStack alignItems="center" marginVertical="$4">
+                        <Text fontSize="$8" fontWeight="bold" color="$color10">
                             {greeting}, User!
-                        </H2>
+                        </Text>
                         <Text color="$gray10" fontSize="$4" fontWeight="500">
                             {format(today, "EEEE, d MMMM yyyy")}
                         </Text>
@@ -226,7 +231,7 @@ const Dashboard = () => {
                         icon=""
                         type="recent-journals"
                         journals={journalEntries}
-                        onViewAllJournals={() => router.push("/journal")}
+                        onViewAllJournals={() => router.push("/journals")}
                     />
                 </YStack>
             </ScrollView>

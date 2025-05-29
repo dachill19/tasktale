@@ -1,11 +1,23 @@
 import FilterToggleGroup from "@/components/FilterToggleGroup";
 import JournalCard from "@/components/JournalCard";
-import React, { useState } from "react";
+import { JournalDialog } from "@/components/JournalDialog";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { FlatList } from "react-native";
 import { Text, YStack } from "tamagui";
 
-const Journal = () => {
+const Journals = () => {
     const [filter, setFilter] = useState("all");
+    const params = useLocalSearchParams();
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        if (params.openDialog === "true") {
+            setOpen(true);
+            router.replace("/journals");
+        }
+    }, [params]);
+
     const journal = [
         {
             id: 1,
@@ -52,6 +64,17 @@ const Journal = () => {
         // Tambahkan logika delete task di sini
     };
 
+    const handleSave = () => {
+        // Logic simpan data
+        console.log("Save clicked");
+        setOpen(false);
+    };
+
+    const handleCancel = () => {
+        console.log("Cancel clicked");
+        setOpen(false);
+    };
+
     const toggleItems = [
         { value: "all", label: "All" },
         { value: "today", label: "Today" },
@@ -66,8 +89,14 @@ const Journal = () => {
             paddingHorizontal="$4"
             alignItems="center"
         >
+            <JournalDialog
+                open={open}
+                onOpenChange={setOpen}
+                onSave={handleSave}
+                onCancel={handleCancel}
+            />
             <Text
-                fontSize="$7"
+                fontSize="$8"
                 fontWeight="bold"
                 fontFamily="$display"
                 color="$color10"
@@ -103,4 +132,4 @@ const Journal = () => {
     );
 };
 
-export default Journal;
+export default Journals;

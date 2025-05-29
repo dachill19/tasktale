@@ -1,5 +1,5 @@
 import { TaskDialog } from "@/components/TaskDialog";
-import { logout } from "@/utils/auth";
+import { logout } from "@/lib/auth";
 import React, { useState } from "react";
 import { Button } from "react-native";
 import { YStack } from "tamagui";

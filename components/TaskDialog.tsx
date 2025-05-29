@@ -1,5 +1,8 @@
+import { createTask, getCurrentUserId, TaskFormData } from "@/lib/task";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar, Plus, X } from "@tamagui/lucide-icons";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useMemo, useReducer } from "react";
+import { Alert, FlatList, Platform } from "react-native";
 import Animated, {
     runOnJS,
     useAnimatedStyle,
@@ -8,85 +11,259 @@ import Animated, {
 } from "react-native-reanimated";
 import { Button, Dialog, Input, Text, XStack, YStack } from "tamagui";
 
-// For React Native DateTimePicker
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { FlatList, Platform } from "react-native";
+// ===== TYPES =====
+type Priority = "high" | "medium" | "low";
 
-// Database integration imports
-import { supabase } from "../utils/supabase";
-import { createTask, TaskFormData } from "../utils/task";
-
-type TaskDialogProps = {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onSave: () => void;
-    onCancel?: () => void;
-    onTaskCreated?: (task: any) => void;
-};
-
-type SubTask = {
+interface SubTask {
     id: number;
-};
-
-function AnimatedInput({
-    id,
-    index,
-    onRemove,
-    onChange,
-}: {
-    id: number;
-    index: number;
-    onRemove: (id: number) => void;
-    onChange: (id: number, value: string) => void;
-}) {
-    const height = useSharedValue(0);
-    const opacity = useSharedValue(0);
-
-    React.useEffect(() => {
-        height.value = withTiming(60, { duration: 300 });
-        opacity.value = withTiming(1, { duration: 300 });
-    }, []);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        height: height.value,
-        opacity: opacity.value,
-        marginBottom: 8,
-    }));
-
-    const handleRemove = () => {
-        height.value = withTiming(0, { duration: 200 });
-        opacity.value = withTiming(0, { duration: 200 }, (finished) => {
-            if (finished) runOnJS(onRemove)(id);
-        });
-    };
-
-    return (
-        <Animated.View style={animatedStyle}>
-            <XStack alignItems="center" gap="$2">
-                <Input
-                    flex={1}
-                    placeholder={`Sub-Task ${index + 1}`}
-                    focusStyle={{ borderColor: "$green10" }}
-                    onChangeText={(text) => onChange(id, text)}
-                />
-                <Button
-                    icon={<X size={18} color="$red10" />}
-                    size={25}
-                    circular
-                    backgroundColor="$red7"
-                    animation="quick"
-                    pressStyle={{
-                        borderWidth: 0,
-                        bg: "$red7",
-                        scale: 0.9,
-                    }}
-                    onPress={handleRemove}
-                />
-            </XStack>
-        </Animated.View>
-    );
+    title: string;
 }
 
+interface TaskFormState {
+    title: string;
+    description: string;
+    priority: Priority;
+    deadline: Date | null;
+    subTasks: SubTask[];
+    isLoading: boolean;
+    showDatePicker: boolean;
+    nextSubTaskId: number;
+}
+
+type TaskFormAction =
+    | { type: "SET_TITLE"; payload: string }
+    | { type: "SET_DESCRIPTION"; payload: string }
+    | { type: "SET_PRIORITY"; payload: Priority }
+    | { type: "SET_DEADLINE"; payload: Date | null }
+    | { type: "ADD_SUBTASK" }
+    | { type: "UPDATE_SUBTASK"; payload: { id: number; title: string } }
+    | { type: "REMOVE_SUBTASK"; payload: number }
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "TOGGLE_DATE_PICKER"; payload?: boolean }
+    | { type: "RESET_FORM" };
+
+interface TaskDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSave?: () => void;
+    onCancel?: () => void;
+    onTaskCreated?: (task: any) => void;
+}
+
+// ===== REDUCER =====
+const initialState: TaskFormState = {
+    title: "",
+    description: "",
+    priority: "medium",
+    deadline: null,
+    subTasks: [],
+    isLoading: false,
+    showDatePicker: false,
+    nextSubTaskId: 0,
+};
+
+function taskFormReducer(
+    state: TaskFormState,
+    action: TaskFormAction
+): TaskFormState {
+    switch (action.type) {
+        case "SET_TITLE":
+            return { ...state, title: action.payload };
+        case "SET_DESCRIPTION":
+            return { ...state, description: action.payload };
+        case "SET_PRIORITY":
+            return { ...state, priority: action.payload };
+        case "SET_DEADLINE":
+            return { ...state, deadline: action.payload };
+        case "ADD_SUBTASK":
+            return {
+                ...state,
+                subTasks: [
+                    ...state.subTasks,
+                    { id: state.nextSubTaskId, title: "" },
+                ],
+                nextSubTaskId: state.nextSubTaskId + 1,
+            };
+        case "UPDATE_SUBTASK":
+            return {
+                ...state,
+                subTasks: state.subTasks.map((st) =>
+                    st.id === action.payload.id
+                        ? { ...st, title: action.payload.title }
+                        : st
+                ),
+            };
+        case "REMOVE_SUBTASK":
+            return {
+                ...state,
+                subTasks: state.subTasks.filter(
+                    (st) => st.id !== action.payload
+                ),
+            };
+        case "SET_LOADING":
+            return { ...state, isLoading: action.payload };
+        case "TOGGLE_DATE_PICKER":
+            return {
+                ...state,
+                showDatePicker: action.payload ?? !state.showDatePicker,
+            };
+        case "RESET_FORM":
+            return initialState;
+        default:
+            return state;
+    }
+}
+
+// ===== UTILITY FUNCTIONS =====
+const formatDate = (deadline: Date): string => {
+    return deadline.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+};
+
+const validateForm = (state: TaskFormState): string | null => {
+    if (!state.title.trim()) return "Task title is required";
+    if (state.title.length > 100)
+        return "Title must be less than 100 characters";
+    if (state.description.length > 500)
+        return "Description must be less than 500 characters";
+    if (!state.deadline) return "Deadline is required"; // Validasi tambahan untuk deadline
+    return null;
+};
+
+const showAlert = (title: string, message: string) => {
+    Alert.alert(title, message, [{ text: "OK" }]);
+};
+
+// ===== ANIMATED SUBTASK COMPONENT =====
+const AnimatedSubTask = React.memo(
+    ({
+        subTask,
+        index,
+        onRemove,
+        onChange,
+    }: {
+        subTask: SubTask;
+        index: number;
+        onRemove: (id: number) => void;
+        onChange: (id: number, value: string) => void;
+    }) => {
+        const height = useSharedValue(0);
+        const opacity = useSharedValue(0);
+
+        React.useEffect(() => {
+            height.value = withTiming(60, { duration: 300 });
+            opacity.value = withTiming(1, { duration: 300 });
+        }, []);
+
+        const animatedStyle = useAnimatedStyle(() => ({
+            height: height.value,
+            opacity: opacity.value,
+            marginBottom: 8,
+        }));
+
+        const handleRemove = useCallback(() => {
+            height.value = withTiming(0, { duration: 200 });
+            opacity.value = withTiming(0, { duration: 200 }, (finished) => {
+                if (finished) runOnJS(onRemove)(subTask.id);
+            });
+        }, [subTask.id, onRemove]);
+
+        const handleChange = useCallback(
+            (text: string) => {
+                onChange(subTask.id, text);
+            },
+            [subTask.id, onChange]
+        );
+
+        return (
+            <Animated.View style={animatedStyle}>
+                <XStack alignItems="center" gap="$2">
+                    <Input
+                        flex={1}
+                        placeholder={`Sub-Task ${index + 1}`}
+                        focusStyle={{ borderColor: "$green10" }}
+                        value={subTask.title}
+                        onChangeText={handleChange}
+                    />
+                    <Button
+                        icon={<X size={18} color="$red10" />}
+                        size={25}
+                        circular
+                        backgroundColor="$red7"
+                        animation="quick"
+                        pressStyle={{
+                            borderWidth: 0,
+                            bg: "$red7",
+                            scale: 0.9,
+                        }}
+                        onPress={handleRemove}
+                    />
+                </XStack>
+            </Animated.View>
+        );
+    }
+);
+
+// ===== PRIORITY BUTTON COMPONENT =====
+const PriorityButton = React.memo(
+    ({
+        priority,
+        selectedPriority,
+        onSelect,
+        color,
+    }: {
+        priority: Priority;
+        selectedPriority: Priority;
+        onSelect: (priority: Priority) => void;
+        color: string;
+    }) => {
+        const isSelected = selectedPriority === priority;
+        const handlePress = useCallback(
+            () => onSelect(priority),
+            [priority, onSelect]
+        );
+
+        return (
+            <Button
+                flex={1}
+                backgroundColor={isSelected ? `$${color}8` : `$${color}4`}
+                borderWidth={isSelected ? 2 : 0}
+                borderColor={isSelected ? `$${color}10` : "transparent"}
+                onPress={handlePress}
+                pressStyle={{
+                    backgroundColor: `$${color}8`,
+                    scale: 0.95,
+                    ...(isSelected && {
+                        borderColor: `$${color}10`,
+                        borderWidth: 2,
+                    }),
+                }}
+            >
+                <XStack alignItems="center" gap="$2">
+                    <XStack
+                        width={8}
+                        height={8}
+                        backgroundColor={`$${color}10`}
+                        borderRadius={99}
+                    />
+                    <Text
+                        fontSize="$4"
+                        color={isSelected ? "white" : `$${color}10`}
+                        fontWeight={isSelected ? "bold" : "normal"}
+                        textTransform="capitalize"
+                    >
+                        {priority}
+                    </Text>
+                </XStack>
+            </Button>
+        );
+    }
+);
+
+// ===== MAIN COMPONENT =====
 export function TaskDialog({
     open,
     onOpenChange,
@@ -94,172 +271,138 @@ export function TaskDialog({
     onCancel,
     onTaskCreated,
 }: TaskDialogProps) {
-    // Existing state
-    const [subTasks, setSubTasks] = useState<SubTask[]>([]);
-    const [nextId, setNextId] = useState(0);
-    const [deadline, setDeadline] = useState<Date | null>(null);
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [selectedPriority, setSelectedPriority] = useState<
-        "high" | "medium" | "low"
-    >("medium");
+    const [state, dispatch] = useReducer(taskFormReducer, initialState);
 
-    // New state for form handling and database integration
-    const [taskTitle, setTaskTitle] = useState('');
-    const [taskDescription, setTaskDescription] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const subTaskRefs = useRef<{ [key: number]: string }>({});
-
-    const handleSubTaskChange = (id: number, value: string) => {
-        subTaskRefs.current[id] = value;
-    };
-
-    const handleAddSubTask = () => {
-        setSubTasks((prev) => [...prev, { id: nextId }]);
-        setNextId((prev) => prev + 1);
-    };
-
-    const handleRemoveSubTask = (id: number) => {
-        setSubTasks((prev) => prev.filter((subTask) => subTask.id !== id));
-        // Clean up the ref for removed subtask
-        delete subTaskRefs.current[id];
-    };
-
-    const renderSubTaskItem = ({
-        item,
-        index,
-    }: {
-        item: SubTask;
-        index: number;
-    }) => (
-        <AnimatedInput
-            id={item.id}
-            index={index}
-            onRemove={handleRemoveSubTask}
-            onChange={handleSubTaskChange}
-        />
-    );
-
-    const keyExtractor = (item: SubTask) => item.id.toString();
-
-    const handleDateChange = (event: any, selectedDate?: Date) => {
-        if (Platform.OS === "android") {
-            setShowDatePicker(false);
-        }
-
-        if (selectedDate) {
-            if (deadline) {
-                const newDate = new Date(selectedDate);
-                setDeadline(newDate);
-            } else {
-                setDeadline(selectedDate);
-            }
-
-            if (Platform.OS === "ios") {
-                setShowDatePicker(false);
-            }
-        }
-    };
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-    };
-
-    const clearDeadline = () => {
-        setDeadline(null);
-    };
-
-    const handleSave = async () => {
-        if (!taskTitle.trim()) {
-            alert('Please enter a task title');
+    // ===== HANDLERS =====
+    const handleSave = useCallback(async () => {
+        const validationError = validateForm(state);
+        if (validationError) {
+            showAlert("Validation Error", validationError);
             return;
         }
 
-        setIsLoading(true);
+        dispatch({ type: "SET_LOADING", payload: true });
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            
-            if (!user) {
-                alert('Please login first');
-                setIsLoading(false);
+            const userResult = await getCurrentUserId();
+            if (!userResult.success || !userResult.data) {
+                showAlert("Authentication Error", "Please login first");
                 return;
             }
 
-            const subTasksData = subTasks
-                .map(subTask => ({
-                    title: subTaskRefs.current[subTask.id] || ''
-                }))
-                .filter(subTask => subTask.title.trim() !== '');
+            const validSubTasks = state.subTasks
+                .filter((st) => st.title.trim())
+                .map((st) => ({ title: st.title.trim() }));
 
             const taskData: TaskFormData = {
-                title: taskTitle.trim(),
-                description: taskDescription.trim() || undefined,
-                priority: selectedPriority,
-                deadline: deadline,
-                subTasks: subTasksData,
+                title: state.title.trim(),
+                description: state.description.trim() || undefined,
+                priority: state.priority,
+                deadline: state.deadline,
+                subTasks: validSubTasks,
             };
 
-            const result = await createTask(taskData, user.id);
+            const result = await createTask(taskData, userResult.data);
 
-            if (result.success) {
-                // Reset form
-                setTaskTitle('');
-                setTaskDescription('');
-                setSelectedPriority('medium');
-                setDeadline(null);
-                setSubTasks([]);
-                setNextId(0);
-                subTaskRefs.current = {};
-
-                if (onTaskCreated && result.data) {
-                    onTaskCreated(result.data);
-                }
-
+            if (result.success && result.data) {
+                dispatch({ type: "RESET_FORM" });
+                onTaskCreated?.(result.data);
                 onOpenChange(false);
-                if (onSave) onSave();
-                alert('Task created successfully!');
+                onSave?.();
+                showAlert("Success", "Task created successfully!");
             } else {
-                alert(`Failed to create task: ${result.error}`);
+                showAlert("Error", result.error || "Failed to create task");
             }
         } catch (error) {
-            console.error('Error saving task:', error);
-            alert('An unexpected error occurred');
+            console.error("Error saving task:", error);
+            showAlert("Error", "An unexpected error occurred");
         } finally {
-            setIsLoading(false);
+            dispatch({ type: "SET_LOADING", payload: false });
         }
-    };
+    }, [state, onTaskCreated, onOpenChange, onSave]);
 
-    const handleCancel = () => {
-        setTaskTitle('');
-        setTaskDescription('');
-        setSelectedPriority('medium');
-        setDeadline(null);
-        setSubTasks([]);
-        setNextId(0);
-        subTaskRefs.current = {};
-        if (onCancel) onCancel();
-    };
+    const handleCancel = useCallback(() => {
+        dispatch({ type: "RESET_FORM" });
+        onCancel?.();
+    }, [onCancel]);
+
+    const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
+        if (Platform.OS === "android") {
+            dispatch({ type: "TOGGLE_DATE_PICKER", payload: false });
+        }
+
+        if (selectedDate) {
+            dispatch({ type: "SET_DEADLINE", payload: selectedDate });
+            if (Platform.OS === "ios") {
+                dispatch({ type: "TOGGLE_DATE_PICKER", payload: false });
+            }
+        }
+    }, []);
+
+    const handleSubTaskChange = useCallback((id: number, title: string) => {
+        dispatch({ type: "UPDATE_SUBTASK", payload: { id, title } });
+    }, []);
+
+    const handleRemoveSubTask = useCallback((id: number) => {
+        dispatch({ type: "REMOVE_SUBTASK", payload: id });
+    }, []);
+
+    const handleAddSubTask = useCallback(() => {
+        dispatch({ type: "ADD_SUBTASK" });
+    }, []);
+
+    const handlePrioritySelect = useCallback((priority: Priority) => {
+        dispatch({ type: "SET_PRIORITY", payload: priority });
+    }, []);
+
+    // ===== MEMOIZED VALUES =====
+    const priorityButtons = useMemo(
+        () => (
+            <XStack gap="$2">
+                <PriorityButton
+                    priority="high"
+                    selectedPriority={state.priority}
+                    onSelect={handlePrioritySelect}
+                    color="red"
+                />
+                <PriorityButton
+                    priority="medium"
+                    selectedPriority={state.priority}
+                    onSelect={handlePrioritySelect}
+                    color="yellow"
+                />
+                <PriorityButton
+                    priority="low"
+                    selectedPriority={state.priority}
+                    onSelect={handlePrioritySelect}
+                    color="green"
+                />
+            </XStack>
+        ),
+        [state.priority, handlePrioritySelect]
+    );
+
+    const renderSubTask = useCallback(
+        ({ item, index }: { item: SubTask; index: number }) => (
+            <AnimatedSubTask
+                subTask={item}
+                index={index}
+                onRemove={handleRemoveSubTask}
+                onChange={handleSubTaskChange}
+            />
+        ),
+        [handleRemoveSubTask, handleSubTaskChange]
+    );
+
+    const keyExtractor = useCallback((item: SubTask) => item.id.toString(), []);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <Dialog.Trigger />
             <Dialog.Portal>
                 <Dialog.Overlay
                     key="overlay"
                     backgroundColor="$shadow6"
-                    animateOnly={["transform", "opacity"]}
-                    animation={[
-                        "quicker",
-                        {
-                            opacity: {
-                                overshootClamping: true,
-                            },
-                        },
-                    ]}
+                    animation="quicker"
                     enterStyle={{ opacity: 0 }}
                     exitStyle={{ opacity: 0 }}
                 />
@@ -271,17 +414,9 @@ export function TaskDialog({
                     borderWidth={2}
                     borderRadius="$6"
                     key="content"
-                    animateOnly={["transform", "opacity"]}
-                    animation={[
-                        "quicker",
-                        {
-                            opacity: {
-                                overshootClamping: true,
-                            },
-                        },
-                    ]}
-                    enterStyle={{ x: 0, y: 0, opacity: 0, scale: 0.7 }}
-                    exitStyle={{ x: 0, y: 0, opacity: 0, scale: 0.7 }}
+                    animation="quicker"
+                    enterStyle={{ opacity: 0, scale: 0.7 }}
+                    exitStyle={{ opacity: 0, scale: 0.7 }}
                     gap="$4"
                 >
                     <Dialog.Title
@@ -291,194 +426,53 @@ export function TaskDialog({
                     >
                         Add Task
                     </Dialog.Title>
+
                     <Dialog.Description>
-                        Make changes to your task here. Click save when you're
-                        done.
+                        Create a new task with optional sub-tasks and deadline.
                     </Dialog.Description>
 
+                    {/* Title Input */}
                     <YStack gap="$2">
                         <Text fontSize="$5" fontWeight="bold">
-                            Task Title
+                            Task Title *
                         </Text>
                         <Input
-                            width="100%"
-                            id="title"
                             placeholder="What needs to be done?"
                             focusStyle={{ borderColor: "$green10" }}
-                            value={taskTitle}
-                            onChangeText={setTaskTitle}
+                            value={state.title}
+                            onChangeText={(text) =>
+                                dispatch({ type: "SET_TITLE", payload: text })
+                            }
+                            maxLength={100}
                         />
                     </YStack>
+
+                    {/* Description Input */}
                     <YStack gap="$2">
                         <Text fontSize="$5" fontWeight="bold">
-                            Description (optional)
+                            Description
                         </Text>
                         <Input
-                            width="100%"
-                            id="description"
                             placeholder="Add details..."
                             focusStyle={{ borderColor: "$green10" }}
-                            value={taskDescription}
-                            onChangeText={setTaskDescription}
+                            value={state.description}
+                            onChangeText={(text) =>
+                                dispatch({
+                                    type: "SET_DESCRIPTION",
+                                    payload: text,
+                                })
+                            }
+                            maxLength={500}
+                            multiline
                         />
                     </YStack>
+
+                    {/* Priority Selection */}
                     <YStack gap="$2">
                         <Text fontSize="$5" fontWeight="bold">
                             Priority
                         </Text>
-                        <XStack gap="$2">
-                            <Button
-                                flex={1}
-                                backgroundColor={
-                                    selectedPriority === "high"
-                                        ? "$red8"
-                                        : "$red4"
-                                }
-                                borderWidth={
-                                    selectedPriority === "high" ? 2 : 0
-                                }
-                                borderColor={
-                                    selectedPriority === "high"
-                                        ? "$red10"
-                                        : "transparent"
-                                }
-                                onPress={() => setSelectedPriority("high")}
-                                pressStyle={{
-                                    backgroundColor: "$red8",
-                                    scale: 0.95,
-                                    ...(selectedPriority === "high" && {
-                                        borderColor: "$red10",
-                                        borderWidth: 2,
-                                    }),
-                                }}
-                            >
-                                <XStack alignItems="center" gap="$2">
-                                    <XStack
-                                        width={8}
-                                        height={8}
-                                        backgroundColor="$red10"
-                                        borderRadius={99}
-                                    />
-                                    <Text
-                                        fontSize="$4"
-                                        color={
-                                            selectedPriority === "high"
-                                                ? "white"
-                                                : "$red10"
-                                        }
-                                        fontWeight={
-                                            selectedPriority === "high"
-                                                ? "bold"
-                                                : "normal"
-                                        }
-                                    >
-                                        High
-                                    </Text>
-                                </XStack>
-                            </Button>
-
-                            <Button
-                                flex={1}
-                                backgroundColor={
-                                    selectedPriority === "medium"
-                                        ? "$yellow8"
-                                        : "$yellow4"
-                                }
-                                borderWidth={
-                                    selectedPriority === "medium" ? 2 : 0
-                                }
-                                borderColor={
-                                    selectedPriority === "medium"
-                                        ? "$yellow10"
-                                        : "transparent"
-                                }
-                                onPress={() => setSelectedPriority("medium")}
-                                pressStyle={{
-                                    backgroundColor: "$yellow8",
-                                    scale: 0.95,
-                                    ...(selectedPriority === "medium" && {
-                                        borderColor: "$yellow10",
-                                        borderWidth: 2,
-                                    }),
-                                }}
-                            >
-                                <XStack alignItems="center" gap="$2">
-                                    <XStack
-                                        width={8}
-                                        height={8}
-                                        backgroundColor="$yellow10"
-                                        borderRadius={99}
-                                    />
-                                    <Text
-                                        fontSize="$4"
-                                        color={
-                                            selectedPriority === "medium"
-                                                ? "white"
-                                                : "$yellow10"
-                                        }
-                                        fontWeight={
-                                            selectedPriority === "medium"
-                                                ? "bold"
-                                                : "normal"
-                                        }
-                                    >
-                                        Medium
-                                    </Text>
-                                </XStack>
-                            </Button>
-
-                            <Button
-                                flex={1}
-                                backgroundColor={
-                                    selectedPriority === "low"
-                                        ? "$green8"
-                                        : "$green4"
-                                }
-                                borderWidth={selectedPriority === "low" ? 2 : 0}
-                                borderColor={
-                                    selectedPriority === "low"
-                                        ? "$green10"
-                                        : "transparent"
-                                }
-                                onPress={() => setSelectedPriority("low")}
-                                pressStyle={{
-                                    backgroundColor: "$green8",
-                                    scale: 0.95,
-                                    ...(selectedPriority === "low" && {
-                                        borderColor: "$green10",
-                                        borderWidth: 2,
-                                    }),
-                                }}
-                            >
-                                <XStack
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    gap="$2"
-                                >
-                                    <XStack
-                                        width={8}
-                                        height={8}
-                                        backgroundColor="$green10"
-                                        borderRadius={99}
-                                    />
-                                    <Text
-                                        fontSize="$4"
-                                        color={
-                                            selectedPriority === "low"
-                                                ? "white"
-                                                : "$green10"
-                                        }
-                                        fontWeight={
-                                            selectedPriority === "low"
-                                                ? "bold"
-                                                : "normal"
-                                        }
-                                    >
-                                        Low
-                                    </Text>
-                                </XStack>
-                            </Button>
-                        </XStack>
+                        {priorityButtons}
                     </YStack>
 
                     {/* Deadline Section */}
@@ -488,9 +482,9 @@ export function TaskDialog({
                             alignItems="center"
                         >
                             <Text fontSize="$5" fontWeight="bold">
-                                Deadline
+                                Deadline *
                             </Text>
-                            {deadline && (
+                            {state.deadline && (
                                 <Button
                                     icon={<X size={18} color="$red10" />}
                                     size={25}
@@ -502,111 +496,102 @@ export function TaskDialog({
                                         bg: "$red7",
                                         scale: 0.9,
                                     }}
-                                    onPress={clearDeadline}
+                                    onPress={() =>
+                                        dispatch({
+                                            type: "SET_DEADLINE",
+                                            payload: null,
+                                        })
+                                    }
                                 />
                             )}
                         </XStack>
 
-                        {deadline ? (
-                            <YStack gap="$2">
-                                <XStack>
-                                    <Button
-                                        flex={1}
-                                        icon={<Calendar size="$1" />}
-                                        backgroundColor="$blue8"
-                                        color="white"
-                                        animation="quick"
-                                        pressStyle={{
-                                            borderColor: "$blue8",
-                                            borderWidth: 2,
-                                            backgroundColor: "$blue8",
-                                            scale: 0.95,
-                                        }}
-                                        onPress={() => setShowDatePicker(true)}
-                                    >
-                                        {formatDate(deadline)}
-                                    </Button>
-                                </XStack>
-                            </YStack>
-                        ) : (
-                            <Button
-                                icon={<Calendar size="$1" />}
-                                backgroundColor="$gray8"
-                                color="white"
-                                animation="quick"
-                                pressStyle={{
-                                    borderColor: "$gray8",
-                                    borderWidth: 2,
-                                    backgroundColor: "$gray8",
-                                    scale: 0.95,
-                                }}
-                                onPress={() => setShowDatePicker(true)}
-                            >
-                                Set Deadline
-                            </Button>
-                        )}
+                        <Button
+                            icon={<Calendar size="$1" />}
+                            backgroundColor={
+                                state.deadline ? "$blue8" : "$gray8"
+                            }
+                            color="white"
+                            animation="quick"
+                            pressStyle={{
+                                borderColor: state.deadline
+                                    ? "$blue8"
+                                    : "$gray8",
+                                borderWidth: 2,
+                                backgroundColor: state.deadline
+                                    ? "$blue8"
+                                    : "$gray8",
+                                scale: 0.95,
+                            }}
+                            onPress={() =>
+                                dispatch({
+                                    type: "TOGGLE_DATE_PICKER",
+                                    payload: true,
+                                })
+                            }
+                        >
+                            {state.deadline
+                                ? formatDate(state.deadline)
+                                : "Set Deadline"}
+                        </Button>
                     </YStack>
 
+                    {/* Sub-Tasks Section */}
                     <YStack gap="$2">
                         <XStack
                             justifyContent="space-between"
                             alignItems="center"
                         >
                             <Text fontSize="$5" fontWeight="bold">
-                                Sub-Task:
+                                Sub-Tasks ({state.subTasks.length})
                             </Text>
                             <Button
                                 icon={<Plus size={18} color="white" />}
                                 bg="$green8"
-                                circular
-                                size={25}
-                                borderWidth={0}
                                 animation="quick"
                                 pressStyle={{
                                     borderWidth: 0,
                                     bg: "$green8",
                                     scale: 0.9,
                                 }}
+                                circular
+                                size={25}
                                 onPress={handleAddSubTask}
                             />
                         </XStack>
 
-                        {/* Scrollable SubTasks Container */}
-                        {subTasks.length > 0 && (
+                        {state.subTasks.length > 0 ? (
                             <YStack maxHeight={150}>
                                 <FlatList
-                                    data={subTasks}
-                                    renderItem={renderSubTaskItem}
+                                    data={state.subTasks}
+                                    renderItem={renderSubTask}
                                     keyExtractor={keyExtractor}
                                     showsVerticalScrollIndicator={false}
-                                    removeClippedSubviews={true}
-                                    maxToRenderPerBatch={10}
-                                    windowSize={10}
-                                    initialNumToRender={5}
+                                    removeClippedSubviews
+                                    maxToRenderPerBatch={5}
+                                    windowSize={5}
                                 />
                             </YStack>
-                        )}
-
-                        {subTasks.length === 0 && (
+                        ) : (
                             <XStack
                                 justifyContent="center"
                                 alignItems="center"
-                                backgroundColor="$gray8"
+                                backgroundColor="$gray6"
                                 borderRadius={8}
-                                height="$4"
+                                padding="$3"
                             >
-                                <Text color="white" fontSize="$4">
-                                    There are no sub-tasks yet. Click + to add.
+                                <Text color="$gray11" fontSize="$3">
+                                    No sub-tasks yet. Click + to add one.
                                 </Text>
                             </XStack>
                         )}
                     </YStack>
 
+                    {/* Action Buttons */}
                     <XStack justifyContent="flex-end" gap="$2">
                         <Dialog.Close asChild>
                             <Button
                                 onPress={handleCancel}
-                                aria-label="Cancel"
                                 backgroundColor="$green4"
                                 color="black"
                                 animation="quick"
@@ -615,37 +600,44 @@ export function TaskDialog({
                                     bg: "$green4",
                                     scale: 0.9,
                                 }}
-                                disabled={isLoading}
+                                disabled={state.isLoading}
                             >
                                 Cancel
                             </Button>
                         </Dialog.Close>
-                        <Dialog.Close asChild>
-                            <Button
-                                onPress={handleSave}
-                                aria-label="Save"
-                                backgroundColor="$green10"
-                                color="white"
-                                animation="quick"
-                                pressStyle={{
-                                    borderWidth: 0,
-                                    bg: "$green10",
-                                    scale: 0.9,
-                                }}
-                                disabled={isLoading}
-                                opacity={isLoading ? 0.6 : 1}
-                            >
-                                {isLoading ? 'Saving...' : 'Save'}
-                            </Button>
-                        </Dialog.Close>
+                        <Button
+                            onPress={handleSave}
+                            backgroundColor="$green10"
+                            color="white"
+                            animation="quick"
+                            pressStyle={{
+                                borderWidth: 0,
+                                bg: "$green10",
+                                scale: 0.9,
+                            }}
+                            disabled={
+                                state.isLoading ||
+                                !state.title.trim() ||
+                                !state.deadline
+                            }
+                            opacity={
+                                state.isLoading ||
+                                !state.title.trim() ||
+                                !state.deadline
+                                    ? 0.6
+                                    : 1
+                            }
+                        >
+                            {state.isLoading ? "Creating..." : "Create Task"}
+                        </Button>
                     </XStack>
                 </Dialog.Content>
             </Dialog.Portal>
 
             {/* Date Picker */}
-            {showDatePicker && (
+            {state.showDatePicker && (
                 <DateTimePicker
-                    value={deadline || new Date()}
+                    value={state.deadline || new Date()}
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={handleDateChange}

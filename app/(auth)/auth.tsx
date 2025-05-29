@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Alert, ImageBackground, TouchableOpacity } from "react-native";
 import { Button, Image, Input, Stack, Text, YStack } from "tamagui";
 
-import { loginWithEmail, loginWithGoogle, signupWithEmail } from "@/utils/auth";
+import { loginWithEmail, loginWithGoogle, signupWithEmail } from "@/lib/auth";
 
 const backgroundImages = [
     require("@/assets/images/background1.png"),

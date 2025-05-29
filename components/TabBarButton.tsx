@@ -1,4 +1,9 @@
-import { Feather } from "@expo/vector-icons";
+import {
+    BarChart2,
+    BookOpen,
+    CheckSquare,
+    Layout,
+} from "@tamagui/lucide-icons";
 import React, { JSX, useEffect } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
@@ -8,7 +13,7 @@ import Animated, {
     withSpring,
 } from "react-native-reanimated";
 
-export type RouteName = "index" | "tasks" | "journal" | "analytics";
+export type RouteName = "index" | "tasks" | "journals" | "analytics";
 
 const TabBarButton = ({
     onPress = () => {},
@@ -22,12 +27,10 @@ const TabBarButton = ({
     label: string;
 }) => {
     const icon: Record<RouteName, (props: any) => JSX.Element> = {
-        index: (props) => <Feather name="layout" size={24} {...props} />,
-        tasks: (props) => <Feather name="check-square" size={24} {...props} />,
-        journal: (props) => <Feather name="book-open" size={24} {...props} />,
-        analytics: (props) => (
-            <Feather name="bar-chart-2" size={24} {...props} />
-        ),
+        index: (props) => <Layout size={24} {...props} />,
+        tasks: (props) => <CheckSquare size={24} {...props} />,
+        journals: (props) => <BookOpen size={24} {...props} />,
+        analytics: (props) => <BarChart2 size={24} {...props} />,
     };
 
     const scale = useSharedValue(0);

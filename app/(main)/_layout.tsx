@@ -148,7 +148,7 @@ export default function Layout() {
                             console.log("Tambah Jurnal");
                             setOpenSheet(false);
                             router.push({
-                                pathname: "/journal",
+                                pathname: "/journals",
                                 params: {
                                     openDialog: "true",
                                 },
@@ -184,7 +184,7 @@ export default function Layout() {
             >
                 <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
                 <Tabs.Screen name="tasks" options={{ title: "Tasks" }} />
-                <Tabs.Screen name="journal" options={{ title: "Journals" }} />
+                <Tabs.Screen name="journals" options={{ title: "Journals" }} />
                 <Tabs.Screen
                     name="analytics"
                     options={{ title: "Analytics" }}
