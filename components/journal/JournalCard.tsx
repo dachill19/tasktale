@@ -1,4 +1,4 @@
-import { Edit3, Trash2 } from "@tamagui/lucide-icons";
+import { Trash2 } from "@tamagui/lucide-icons";
 import React from "react";
 import { TouchableOpacity } from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
@@ -9,7 +9,6 @@ interface JournalCardProps {
     content: string;
     image?: string;
     tags: string[];
-    onEdit: () => void;
     onDelete: () => void;
 }
 
@@ -29,7 +28,6 @@ const JournalCard: React.FC<JournalCardProps> = ({
     content,
     image,
     tags,
-    onEdit,
     onDelete,
 }) => {
     return (
@@ -62,15 +60,9 @@ const JournalCard: React.FC<JournalCardProps> = ({
                     </Text>
                 </XStack>
 
-                {/* Edit & Delete Buttons */}
-                <XStack gap="$2" alignItems="center">
-                    <TouchableOpacity onPress={onEdit}>
-                        <Edit3 size="$1" color="$blue10" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={onDelete}>
-                        <Trash2 size="$1" color="$red10" />
-                    </TouchableOpacity>
-                </XStack>
+                <TouchableOpacity onPress={onDelete}>
+                    <Trash2 size="$1" color="$red10" />
+                </TouchableOpacity>
             </XStack>
 
             {/* Content */}
