@@ -1,7 +1,5 @@
 import { TaskDialog } from "@/components/TaskDialog";
-import { logout } from "@/lib/auth";
 import React, { useState } from "react";
-import { Button } from "react-native";
 import { YStack } from "tamagui";
 
 export default function Analytics() {
@@ -17,11 +15,6 @@ export default function Analytics() {
         console.log("Cancel clicked");
         setOpen(false);
     };
-
-    const handleLogout = async () => {
-        await logout();
-    };
-
     return (
         <YStack gap="$3" padding="$4">
             <TaskDialog
@@ -30,7 +23,6 @@ export default function Analytics() {
                 onSave={handleSave}
                 onCancel={handleCancel}
             />
-            <Button title="Logout" onPress={handleLogout} />
         </YStack>
     );
 }

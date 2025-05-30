@@ -52,6 +52,11 @@ export default function LandingPage() {
                     borderRadius={100}
                     width="80%"
                     height="$5"
+                    animation="quick"
+                    pressStyle={{
+                        bg: "#4CAF50",
+                        scale: 0.9,
+                    }}
                 >
                     Get Started
                 </Button>

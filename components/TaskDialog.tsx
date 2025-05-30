@@ -1,4 +1,10 @@
-import { createTask, getCurrentUserId, TaskFormData, TaskWithSubTasks, updateTask } from "@/lib/task";
+import {
+    createTask,
+    getCurrentUserId,
+    TaskFormData,
+    TaskWithSubTasks,
+    updateTask,
+} from "@/lib/task";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar, Plus, X } from "@tamagui/lucide-icons";
 import React, { useCallback, useMemo, useReducer } from "react";
@@ -9,7 +15,7 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
-import { Button, Dialog, Input, Text, XStack, YStack } from "tamagui";
+import { Button, Dialog, Input, Text, TextArea, XStack, YStack } from "tamagui";
 
 // ===== TYPES =====
 type Priority = "high" | "medium" | "low";
@@ -324,11 +330,13 @@ export function TaskDialog({
                 dispatch({ type: "RESET_FORM" });
                 onOpenChange(false);
                 onSave?.();
-                showAlert("Success", taskToEdit ? "Task updated!" : "Task created!");
+                showAlert(
+                    "Success",
+                    taskToEdit ? "Task updated!" : "Task created!"
+                );
             } else {
                 showAlert("Error", errorMsg);
             }
-
         } catch (error) {
             console.error("Error saving task:", error);
             showAlert("Error", "An unexpected error occurred");
@@ -373,28 +381,38 @@ export function TaskDialog({
 
     React.useEffect(() => {
         console.log("taskToEdit changed:", taskToEdit);
-        
+
         if (taskToEdit) {
             dispatch({ type: "RESET_FORM" });
-            
+
             dispatch({ type: "SET_TITLE", payload: taskToEdit.title });
-            dispatch({ type: "SET_DESCRIPTION", payload: taskToEdit.description ?? "" });
+            dispatch({
+                type: "SET_DESCRIPTION",
+                payload: taskToEdit.description ?? "",
+            });
             dispatch({ type: "SET_PRIORITY", payload: taskToEdit.priority });
-            
+
             if (taskToEdit.deadline) {
                 let deadlineDate: Date | null = null;
-                
+
                 try {
                     const parsed = new Date(taskToEdit.deadline);
                     if (!isNaN(parsed.getTime())) {
                         deadlineDate = parsed;
                     } else {
-                        console.warn("Could not parse deadline:", taskToEdit.deadline);
+                        console.warn(
+                            "Could not parse deadline:",
+                            taskToEdit.deadline
+                        );
                     }
                 } catch (error) {
-                    console.warn("Error parsing deadline:", taskToEdit.deadline, error);
+                    console.warn(
+                        "Error parsing deadline:",
+                        taskToEdit.deadline,
+                        error
+                    );
                 }
-                
+
                 if (deadlineDate) {
                     dispatch({ type: "SET_DEADLINE", payload: deadlineDate });
                 }
@@ -402,12 +420,12 @@ export function TaskDialog({
 
             if (taskToEdit.sub_tasks && taskToEdit.sub_tasks.length > 0) {
                 let nextId = 0;
-                
+
                 taskToEdit.sub_tasks.forEach((st) => {
                     dispatch({ type: "ADD_SUBTASK" });
-                    dispatch({ 
-                        type: "UPDATE_SUBTASK", 
-                        payload: { id: nextId, title: st.title } 
+                    dispatch({
+                        type: "UPDATE_SUBTASK",
+                        payload: { id: nextId, title: st.title },
                     });
                     nextId++;
                 });
@@ -486,11 +504,12 @@ export function TaskDialog({
                     maxHeight="85%"
                     alignSelf="center"
                 >
-                    <Dialog.Title 
-                    fontSize="$8" 
-                    fontWeight="bold" 
-                    color="$green10">
-                    {taskToEdit ? "Edit Task" : "Add Task"}
+                    <Dialog.Title
+                        fontSize="$8"
+                        fontWeight="bold"
+                        color="$green10"
+                    >
+                        {taskToEdit ? "Edit Task" : "Add Task"}
                     </Dialog.Title>
 
                     <Dialog.Description>
@@ -520,7 +539,7 @@ export function TaskDialog({
                         <Text fontSize="$5" fontWeight="bold">
                             Description
                         </Text>
-                        <Input
+                        <TextArea
                             placeholder="Add details..."
                             focusStyle={{ borderColor: "$green10" }}
                             value={state.description}
@@ -674,33 +693,36 @@ export function TaskDialog({
                             </Button>
                         </Dialog.Close>
                         <Button
-    onPress={handleSave}
-    backgroundColor="$green10"
-    color="white"
-    animation="quick"
-    pressStyle={{
-        borderWidth: 0,
-        bg: "$green10",
-        scale: 0.9,
-    }}
-    disabled={
-        state.isLoading ||
-        !state.title.trim() ||
-        !state.deadline
-    }
-    opacity={
-        state.isLoading ||
-        !state.title.trim() ||
-        !state.deadline
-            ? 0.6
-            : 1
-    }
->
-    {state.isLoading 
-        ? (taskToEdit ? "Updating..." : "Creating...") 
-        : (taskToEdit ? "Update Task" : "Create Task")
-    }
-            </Button>
+                            onPress={handleSave}
+                            backgroundColor="$green10"
+                            color="white"
+                            animation="quick"
+                            pressStyle={{
+                                borderWidth: 0,
+                                bg: "$green10",
+                                scale: 0.9,
+                            }}
+                            disabled={
+                                state.isLoading ||
+                                !state.title.trim() ||
+                                !state.deadline
+                            }
+                            opacity={
+                                state.isLoading ||
+                                !state.title.trim() ||
+                                !state.deadline
+                                    ? 0.6
+                                    : 1
+                            }
+                        >
+                            {state.isLoading
+                                ? taskToEdit
+                                    ? "Updating..."
+                                    : "Creating..."
+                                : taskToEdit
+                                ? "Update Task"
+                                : "Create Task"}
+                        </Button>
                     </XStack>
                 </Dialog.Content>
             </Dialog.Portal>

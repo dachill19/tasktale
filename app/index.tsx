@@ -1,22 +1,21 @@
-import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {
+    const { session, isInitialized } = useAuthStore();
     const router = useRouter();
 
     useEffect(() => {
-        const checkSession = async () => {
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-            if (session) router.replace("/(main)");
-            else router.replace("/(auth)");
-        };
+        if (!isInitialized) return;
 
-        checkSession();
-    }, []);
+        if (session) {
+            router.replace("/(main)");
+        } else {
+            router.replace("/(auth)");
+        }
+    }, [session, isInitialized]);
 
     return (
         <View

@@ -1,13 +1,16 @@
 import { TabBar } from "@/components/TabBar";
-import { Bell, Plus } from "@tamagui/lucide-icons";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { Bell, LogOut, Plus, User } from "@tamagui/lucide-icons";
 import { router, Tabs } from "expo-router";
 import React, { useState } from "react";
-import { TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
     Avatar,
     Button,
     Image,
+    Popover,
+    Separator,
     Sheet,
     Text,
     View,
@@ -16,6 +19,33 @@ import {
 } from "tamagui";
 
 function Header() {
+    const { user, signOut } = useAuthStore();
+    const [showUserMenu, setShowUserMenu] = useState(false);
+
+    // Get user info from auth store
+    const userName =
+        user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+    const userEmail = user?.email || "";
+    const userAvatar =
+        user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
+    const handleLogout = () => {
+        Alert.alert("Logout", "Are you sure you want to logout?", [
+            {
+                text: "Cancel",
+                style: "cancel",
+            },
+            {
+                text: "Logout",
+                style: "destructive",
+                onPress: () => {
+                    signOut();
+                    setShowUserMenu(false);
+                },
+            },
+        ]);
+    };
+
     return (
         <SafeAreaView edges={["top"]}>
             <YStack
@@ -47,11 +77,12 @@ function Header() {
 
                     {/* Notifikasi dan Avatar */}
                     <XStack ai="center" gap="$3">
+                        {/* Notification Button */}
                         <Button
                             chromeless
                             circular
                             size="$3"
-                            onPress={() => console.log("Tombol diklik!")}
+                            onPress={() => console.log("Notification clicked!")}
                         >
                             <Bell size={20} color="#000" />
                             <YStack
@@ -65,15 +96,93 @@ function Header() {
                             />
                         </Button>
 
-                        <TouchableOpacity>
-                            <Avatar circular size="$5">
-                                <Avatar.Image
-                                    accessibilityLabel="Cam"
-                                    src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
-                                />
-                                <Avatar.Fallback backgroundColor="$blue10" />
-                            </Avatar>
-                        </TouchableOpacity>
+                        {/* User Avatar with Popover Menu */}
+                        <Popover
+                            open={showUserMenu}
+                            onOpenChange={setShowUserMenu}
+                            placement="bottom-end"
+                        >
+                            <Popover.Trigger asChild>
+                                <TouchableOpacity>
+                                    <Avatar circular size="$5">
+                                        {userAvatar ? (
+                                            <Avatar.Image
+                                                accessibilityLabel={userName}
+                                                src={userAvatar}
+                                            />
+                                        ) : (
+                                            <Avatar.Fallback
+                                                backgroundColor="$blue10"
+                                                alignItems="center"
+                                                justifyContent="center"
+                                            >
+                                                <User size={24} color="white" />
+                                            </Avatar.Fallback>
+                                        )}
+                                    </Avatar>
+                                </TouchableOpacity>
+                            </Popover.Trigger>
+
+                            <Popover.Content
+                                bg="$background"
+                                borderWidth={1}
+                                borderColor="$borderColor"
+                                borderRadius="$4"
+                                padding="$4"
+                                elevation={5}
+                                shadowColor="$shadowColor"
+                                shadowOffset={{ width: 0, height: 2 }}
+                                shadowOpacity={0.25}
+                                shadowRadius={3.84}
+                            >
+                                <YStack gap="$3" minWidth={200}>
+                                    {/* User Info */}
+                                    <YStack gap="$1">
+                                        <Text
+                                            fontSize="$5"
+                                            fontWeight="bold"
+                                            color="$color12"
+                                        >
+                                            {userName}
+                                        </Text>
+                                        <Text fontSize="$3" color="$color10">
+                                            {userEmail}
+                                        </Text>
+                                    </YStack>
+
+                                    <Separator />
+
+                                    {/* Profile Button */}
+                                    <Button
+                                        size="$3"
+                                        backgroundColor="transparent"
+                                        color="$color11"
+                                        justifyContent="flex-start"
+                                        icon={<User size={16} />}
+                                        onPress={() => {
+                                            setShowUserMenu(false);
+                                            console.log("Profile clicked!");
+                                        }}
+                                    >
+                                        Profile
+                                    </Button>
+
+                                    <Separator />
+
+                                    {/* Logout Button */}
+                                    <Button
+                                        size="$3"
+                                        backgroundColor="transparent"
+                                        color="$red10"
+                                        justifyContent="flex-start"
+                                        icon={<LogOut size={16} />}
+                                        onPress={handleLogout}
+                                    >
+                                        Logout
+                                    </Button>
+                                </YStack>
+                            </Popover.Content>
+                        </Popover>
                     </XStack>
                 </XStack>
             </YStack>
@@ -159,6 +268,8 @@ export default function Layout() {
                     </Button>
                 </Sheet.Frame>
             </Sheet>
+
+            {/* Floating Action Button */}
             <Button
                 icon={<Plus size="$3" color="white" />}
                 size="$6"
