@@ -140,7 +140,7 @@ export function JournalDialog({
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ["images"],
                 allowsEditing: true,
-                quality: 0.8,
+                quality: 1,
                 allowsMultipleSelection: false,
             });
 
