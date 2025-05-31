@@ -230,8 +230,8 @@ const Journals = () => {
                         <RefreshControl
                             refreshing={loading}
                             onRefresh={handleRefresh}
-                            colors={["#10b981"]} // green color for Android
-                            tintColor="#10b981" // green color for iOS
+                            colors={["#10b981"]}
+                            tintColor="#10b981"
                         />
                     }
                     renderItem={({ item }) => (
@@ -239,7 +239,11 @@ const Journals = () => {
                             date={item.created_at}
                             mood={item.mood}
                             content={item.content}
-                            image={item.images?.[0]?.url} // Use first image if available
+                            images={
+                                item.images?.map(
+                                    (img: { url: string }) => img.url
+                                ) || []
+                            }
                             tags={
                                 item.tags?.map(
                                     (tag: { name: string }) => `#${tag.name}`

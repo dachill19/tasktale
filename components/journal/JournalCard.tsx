@@ -1,13 +1,13 @@
 import { Trash2 } from "@tamagui/lucide-icons";
 import React from "react";
-import { TouchableOpacity } from "react-native";
+import { ScrollView, TouchableOpacity } from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
 
 interface JournalCardProps {
     date: string;
     mood: string;
     content: string;
-    image?: string;
+    images?: string[]; // Changed to array of strings
     tags: string[];
     onDelete: () => void;
 }
@@ -26,10 +26,164 @@ const JournalCard: React.FC<JournalCardProps> = ({
     date,
     mood,
     content,
-    image,
+    images,
     tags,
     onDelete,
 }) => {
+    // Helper function to render images based on count
+    const renderImages = () => {
+        if (!images || images.length === 0) return null;
+
+        if (images.length === 1) {
+            // Single image - display large
+            return (
+                <Image
+                    source={{ uri: images[0] }}
+                    width="100%"
+                    height={200}
+                    borderRadius="$3"
+                    marginBottom="$3"
+                    objectFit="cover"
+                />
+            );
+        } else if (images.length === 2) {
+            // Two images - display side by side
+            return (
+                <XStack gap="$2" marginBottom="$3">
+                    {images.map((image, index) => (
+                        <Image
+                            key={index}
+                            source={{ uri: image }}
+                            flex={1}
+                            height={150}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                    ))}
+                </XStack>
+            );
+        } else if (images.length === 3) {
+            // Three images - first large, two small on the right
+            return (
+                <XStack gap="$2" marginBottom="$3">
+                    <Image
+                        source={{ uri: images[0] }}
+                        flex={2}
+                        height={150}
+                        borderRadius="$3"
+                        objectFit="cover"
+                    />
+                    <YStack flex={1} gap="$2">
+                        <Image
+                            source={{ uri: images[1] }}
+                            width="100%"
+                            height={72}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                        <Image
+                            source={{ uri: images[2] }}
+                            width="100%"
+                            height={72}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                    </YStack>
+                </XStack>
+            );
+        } else {
+            // Four or more images - grid layout with horizontal scroll for overflow
+            return (
+                <YStack marginBottom="$3">
+                    <XStack gap="$2" marginBottom="$2">
+                        <Image
+                            source={{ uri: images[0] }}
+                            flex={1}
+                            height={100}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                        <Image
+                            source={{ uri: images[1] }}
+                            flex={1}
+                            height={100}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                    </XStack>
+                    <XStack gap="$2">
+                        <Image
+                            source={{ uri: images[2] }}
+                            flex={1}
+                            height={100}
+                            borderRadius="$3"
+                            objectFit="cover"
+                        />
+                        {images.length > 3 && (
+                            <YStack
+                                flex={1}
+                                height={100}
+                                borderRadius="$3"
+                                backgroundColor="$gray8"
+                                alignItems="center"
+                                justifyContent="center"
+                                position="relative"
+                            >
+                                <Image
+                                    source={{ uri: images[3] }}
+                                    width="100%"
+                                    height="100%"
+                                    borderRadius="$3"
+                                    objectFit="cover"
+                                    position="absolute"
+                                />
+                                {images.length > 4 && (
+                                    <YStack
+                                        position="absolute"
+                                        width="100%"
+                                        height="100%"
+                                        backgroundColor="rgba(0,0,0,0.5)"
+                                        borderRadius="$3"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                    >
+                                        <Text
+                                            color="white"
+                                            fontSize="$6"
+                                            fontWeight="bold"
+                                        >
+                                            +{images.length - 4}
+                                        </Text>
+                                    </YStack>
+                                )}
+                            </YStack>
+                        )}
+                    </XStack>
+                    {images.length > 4 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={{ marginTop: 8 }}
+                        >
+                            <XStack gap="$2" paddingRight="$4">
+                                {images.slice(4).map((image, index) => (
+                                    <Image
+                                        key={index + 4}
+                                        source={{ uri: image }}
+                                        width={80}
+                                        height={80}
+                                        borderRadius="$2"
+                                        objectFit="cover"
+                                    />
+                                ))}
+                            </XStack>
+                        </ScrollView>
+                    )}
+                </YStack>
+            );
+        }
+    };
+
     return (
         <YStack
             backgroundColor="$background"
@@ -43,7 +197,7 @@ const JournalCard: React.FC<JournalCardProps> = ({
             elevation={2}
             animation="quick"
             pressStyle={{
-                scale: 0.95, // opsional, beri efek scale saat ditekan
+                scale: 0.95,
             }}
         >
             {/* Mood + Date */}
@@ -70,17 +224,8 @@ const JournalCard: React.FC<JournalCardProps> = ({
                 {content}
             </Text>
 
-            {/* Image */}
-            {image && (
-                <Image
-                    source={{ uri: image }}
-                    width={160}
-                    height={160}
-                    borderRadius="$5"
-                    marginBottom="$2"
-                    objectFit="cover"
-                />
-            )}
+            {/* Images */}
+            {renderImages()}
 
             {/* Tags */}
             <XStack flexWrap="wrap" gap="$2">
