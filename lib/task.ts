@@ -177,13 +177,16 @@ export const getFilteredTasks = async (
                 break;
             case "today": {
                 const now = DateTime.local();
-                const startOfDayLocal = now.startOf("day").toUTC().toISO();
-                const endOfDayLocal = now.endOf("day").toUTC().toISO();
+                const endOfDayLocal = now.endOf("day");
+                
+                // Convert ke UTC untuk query database
+                const nowUTC = now.toUTC().toISO();
+                const endOfDayUTC = endOfDayLocal.toUTC().toISO();
 
                 query = query
                     .eq("completed", false) // Hanya task yang belum selesai
-                    .gte("deadline", startOfDayLocal)
-                    .lte("deadline", endOfDayLocal);
+                    .gte("deadline", nowUTC) // Deadline >= sekarang (tidak termasuk yang lewat)
+                    .lte("deadline", endOfDayUTC); // Deadline <= akhir hari ini
                 break;
             }
         }
