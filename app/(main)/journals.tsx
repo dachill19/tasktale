@@ -152,7 +152,7 @@ const Journals = () => {
         { value: "this-month", label: "This Month" },
     ];
 
-    if (loading && journals.length === 0) {
+    if (loading) {
         return (
             <YStack
                 flex={1}

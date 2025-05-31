@@ -71,9 +71,9 @@ export const uploadImageToStorage = async (
 
         // Method for React Native/Expo - Use FormData
         const formData = new FormData();
-        formData.append('file', {
+        formData.append("file", {
             uri: imageUri,
-            type: 'image/jpeg',
+            type: "image/jpeg",
             name: filename,
         } as any);
 
@@ -107,29 +107,49 @@ export const deleteImageFromStorage = async (
     imageUrl: string
 ): Promise<ServiceResponse<void>> => {
     try {
-        // Extract path from URL
-        const url = new URL(imageUrl);
-        const pathParts = url.pathname.split("/");
-        const bucketIndex = pathParts.findIndex(
-            (part) => part === "journal-images"
-        );
+        console.log("Attempting to delete image:", imageUrl);
 
-        if (bucketIndex === -1 || bucketIndex === pathParts.length - 1) {
-            return { success: false, error: "Invalid image URL format" };
+        // Supabase public URL format: https://[project-ref].supabase.co/storage/v1/object/public/[bucket-name]/[file-path]
+        const url = new URL(imageUrl);
+        const pathname = url.pathname;
+
+        // Find the bucket name in the path
+        const publicIndex = pathname.indexOf("/public/");
+        if (publicIndex === -1) {
+            console.error("Invalid Supabase storage URL format:", imageUrl);
+            return { success: false, error: "Invalid storage URL format" };
         }
 
-        const filePath = pathParts.slice(bucketIndex + 1).join("/");
+        // Extract everything after /public/bucket-name/
+        const afterPublic = pathname.substring(publicIndex + "/public/".length);
+        const pathParts = afterPublic.split("/");
+
+        if (pathParts.length < 2) {
+            console.error("Cannot extract file path from URL:", imageUrl);
+            return {
+                success: false,
+                error: "Cannot extract file path from URL",
+            };
+        }
+
+        // Skip bucket name (first part) and get the actual file path
+        const filePath = pathParts.slice(1).join("/");
+
+        console.log("Extracted file path:", filePath);
 
         const { error } = await supabase.storage
             .from("journal-images")
             .remove([filePath]);
 
         if (error) {
+            console.error("Supabase storage deletion error:", error);
             return { success: false, error: error.message };
         }
 
+        console.log("Successfully deleted image from storage");
         return { success: true };
     } catch (error) {
+        console.error("Error in deleteImageFromStorage:", error);
         return {
             success: false,
             error: handleError(error, "Deleting image from storage"),
@@ -162,23 +182,21 @@ export const createJournal = async (
     userId: string
 ): Promise<ServiceResponse<JournalWithAssets>> => {
     try {
-        // First, upload all images to storage
+        // Filter images that need to be uploaded (local images only)
+        const localImages = journalData.images.filter(
+            (image) => image.url.trim() && !image.url.startsWith("http")
+        );
+
+        // Upload local images to storage
         const uploadedImages: string[] = [];
         const uploadErrors: string[] = [];
 
-        for (const image of journalData.images) {
-            if (image.url.trim()) {
-                const uploadResult = await uploadImageToStorage(
-                    image.url,
-                    userId
-                );
-                if (uploadResult.success && uploadResult.data) {
-                    uploadedImages.push(uploadResult.data);
-                } else {
-                    uploadErrors.push(
-                        uploadResult.error || "Unknown upload error"
-                    );
-                }
+        for (const image of localImages) {
+            const uploadResult = await uploadImageToStorage(image.url, userId);
+            if (uploadResult.success && uploadResult.data) {
+                uploadedImages.push(uploadResult.data);
+            } else {
+                uploadErrors.push(uploadResult.error || "Unknown upload error");
             }
         }
 

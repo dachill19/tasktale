@@ -1,5 +1,4 @@
-import { getCurrentUserId, uploadImageToStorage } from "@/lib/journal";
-import { useJournalDialogStore } from "@/lib/stores/journalDialogStore"; // Adjust path as needed
+import { useJournalDialogStore } from "@/lib/stores/journalDialogStore";
 import { Plus, X } from "@tamagui/lucide-icons";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect } from "react";
@@ -9,7 +8,6 @@ import {
     Dialog,
     Image,
     Input,
-    Spinner,
     Text,
     TextArea,
     XStack,
@@ -53,21 +51,12 @@ export function JournalDialog({
         images,
         tags,
         isLoading,
-        isUploading,
-        uploadingImageIndex,
-        uploadProgress,
         setMood,
         setContent,
         setTags,
         addImage,
         removeImage,
-        updateImageUrl,
-        setImageAsUploaded,
-        setUploading,
-        setUploadingImageIndex,
-        setUploadProgress,
         isFormValid,
-        hasLocalImages,
         resetForm,
         getFormData,
     } = useJournalDialogStore();
@@ -88,39 +77,13 @@ export function JournalDialog({
             return;
         }
 
-        if (hasLocalImages()) {
-            Alert.alert(
-                "Images Uploading",
-                "Some images are still being processed. Please wait for all uploads to complete."
-            );
-            return;
-        }
-
         onSave(getFormData());
         resetForm();
     };
 
     const handleCancel = () => {
-        if (isUploading) {
-            Alert.alert(
-                "Upload in Progress",
-                "Images are still being uploaded. Are you sure you want to cancel?",
-                [
-                    { text: "Continue", style: "cancel" },
-                    {
-                        text: "Cancel",
-                        style: "destructive",
-                        onPress: () => {
-                            resetForm();
-                            onCancel?.();
-                        },
-                    },
-                ]
-            );
-        } else {
-            resetForm();
-            onCancel?.();
-        }
+        resetForm();
+        onCancel?.();
     };
 
     const pickImage = async () => {
@@ -146,88 +109,16 @@ export function JournalDialog({
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const uri = result.assets[0].uri;
-
-                // Add image to store with local flag
-                const newImage = addImage(uri, true);
-                const newImageIndex = images.length; // Index before adding
-
-                // Start upload process
-                setUploading(true);
-                setUploadingImageIndex(newImageIndex);
-                setUploadProgress("Getting user information...");
-
-                try {
-                    // Get current user ID
-                    const userResponse = await getCurrentUserId();
-
-                    if (!userResponse.success || !userResponse.data) {
-                        throw new Error("Failed to get user information");
-                    }
-
-                    setUploadProgress("Uploading image...");
-
-                    // Upload image to storage
-                    const uploadResponse = await uploadImageToStorage(
-                        uri,
-                        userResponse.data
-                    );
-
-                    if (
-                        uploadResponse.success &&
-                        uploadResponse.data &&
-                        newImage.id
-                    ) {
-                        // Update the image URL with the uploaded URL
-                        updateImageUrl(newImage.id, uploadResponse.data);
-                        setImageAsUploaded(newImage.id);
-                        setUploadProgress("Upload completed!");
-                    } else {
-                        // Remove the failed image
-                        if (newImage.id) {
-                            removeImage(newImage.id);
-                        }
-                        throw new Error(
-                            uploadResponse.error || "Upload failed"
-                        );
-                    }
-                } catch (error) {
-                    console.error("Error uploading image:", error);
-                    Alert.alert(
-                        "Upload Failed",
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to upload image"
-                    );
-
-                    // Remove the failed image
-                    if (newImage.id) {
-                        removeImage(newImage.id);
-                    }
-                } finally {
-                    setUploading(false);
-                    setUploadingImageIndex(null);
-                    setUploadProgress("");
-                }
+                // Just add the local image URI to the store
+                addImage(uri, true); // true = isLocal (will be uploaded on save)
             }
         } catch (error) {
             console.error("Error picking image:", error);
             Alert.alert("Error", "Failed to pick image. Please try again.");
-            setUploading(false);
-            setUploadingImageIndex(null);
-            setUploadProgress("");
         }
     };
 
     const handleRemoveImage = (imageId: string) => {
-        const imageIndex = images.findIndex((img) => img.id === imageId);
-        if (uploadingImageIndex === imageIndex) {
-            Alert.alert(
-                "Upload in Progress",
-                "This image is still being uploaded. Please wait for it to complete."
-            );
-            return;
-        }
-
         Alert.alert(
             "Remove Image",
             "Are you sure you want to remove this image?",
@@ -365,7 +256,7 @@ export function JournalDialog({
                             alignItems="center"
                         >
                             <Text fontSize="$5" fontWeight="bold">
-                                Upload Images
+                                Images
                             </Text>
                             <Button
                                 icon={<Plus size={18} color="white" />}
@@ -379,27 +270,8 @@ export function JournalDialog({
                                 circular
                                 size={25}
                                 onPress={pickImage}
-                                disabled={isUploading}
-                                opacity={isUploading ? 0.6 : 1}
                             />
                         </XStack>
-
-                        {/* Upload Status */}
-                        {isUploading && (
-                            <XStack
-                                gap="$2"
-                                alignItems="center"
-                                justifyContent="center"
-                                backgroundColor="$green2"
-                                padding="$2"
-                                borderRadius="$2"
-                            >
-                                <Spinner size="small" color="$green10" />
-                                <Text fontSize="$3" color="$green10">
-                                    {uploadProgress}
-                                </Text>
-                            </XStack>
-                        )}
 
                         {/* Preview Images */}
                         {images.length > 0 ? (
@@ -413,30 +285,29 @@ export function JournalDialog({
                                 }}
                                 style={{ height: 80, flexGrow: 0 }}
                                 showsHorizontalScrollIndicator={false}
-                                renderItem={({ item, index }) => (
+                                renderItem={({ item }) => (
                                     <YStack
                                         width={80}
                                         height={80}
                                         position="relative"
                                     >
-                                        {/* Upload indicator */}
+                                        {/* Local image indicator */}
                                         {item.isLocal && (
                                             <YStack
                                                 position="absolute"
-                                                top={0}
-                                                left={0}
-                                                right={0}
-                                                bottom={0}
-                                                backgroundColor="rgba(0,0,0,0.5)"
+                                                top={2}
+                                                left={2}
+                                                backgroundColor="$blue8"
                                                 borderRadius="$2"
-                                                justifyContent="center"
-                                                alignItems="center"
+                                                paddingHorizontal="$1"
                                                 zIndex={2}
                                             >
-                                                <Spinner
-                                                    size="small"
+                                                <Text
+                                                    fontSize="$1"
                                                     color="white"
-                                                />
+                                                >
+                                                    NEW
+                                                </Text>
                                             </YStack>
                                         )}
 
@@ -454,8 +325,6 @@ export function JournalDialog({
                                                 item.id &&
                                                 handleRemoveImage(item.id)
                                             }
-                                            disabled={item.isLocal}
-                                            opacity={item.isLocal ? 0.6 : 1}
                                         />
 
                                         {/* Image */}
@@ -505,8 +374,8 @@ export function JournalDialog({
                                     bg: "$green4",
                                     scale: 0.9,
                                 }}
-                                disabled={isUploading || isLoading}
-                                opacity={isUploading || isLoading ? 0.6 : 1}
+                                disabled={isLoading}
+                                opacity={isLoading ? 0.6 : 1}
                             >
                                 Cancel
                             </Button>
@@ -522,22 +391,10 @@ export function JournalDialog({
                                     bg: "$green10",
                                     scale: 0.9,
                                 }}
-                                disabled={
-                                    !isFormValid() ||
-                                    isUploading ||
-                                    hasLocalImages()
-                                }
-                                opacity={
-                                    !isFormValid() ||
-                                    isUploading ||
-                                    hasLocalImages()
-                                        ? 0.6
-                                        : 1
-                                }
+                                disabled={!isFormValid() || isLoading}
+                                opacity={!isFormValid() || isLoading ? 0.6 : 1}
                             >
-                                {isUploading || isLoading
-                                    ? "Saving..."
-                                    : "Save"}
+                                {isLoading ? "Saving..." : "Save"}
                             </Button>
                         </Dialog.Close>
                     </XStack>

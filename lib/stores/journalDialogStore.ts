@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface JournalImage {
     id?: string;
     url: string;
-    isLocal?: boolean; // For tracking upload status
+    isLocal?: boolean; // For tracking if image is local (will be uploaded on save)
 }
 
 interface JournalDialogState {
@@ -18,11 +18,6 @@ interface JournalDialogState {
     isLoading: boolean;
     showDatePicker: boolean;
 
-    // Upload state
-    isUploading: boolean;
-    uploadingImageIndex: number | null;
-    uploadProgress: string;
-
     // ID generator for images only
     nextImageId: number;
 
@@ -35,13 +30,6 @@ interface JournalDialogState {
     // Image actions
     addImage: (url: string, isLocal?: boolean) => JournalImage;
     removeImage: (id: string) => void;
-    updateImageUrl: (id: string, newUrl: string) => void;
-    setImageAsUploaded: (id: string) => void;
-
-    // Upload actions
-    setUploading: (isUploading: boolean) => void;
-    setUploadingImageIndex: (index: number | null) => void;
-    setUploadProgress: (progress: string) => void;
 
     // UI actions
     setLoading: (isLoading: boolean) => void;
@@ -49,7 +37,6 @@ interface JournalDialogState {
 
     // Form validation
     isFormValid: () => boolean;
-    hasLocalImages: () => boolean;
 
     // Form management
     resetForm: () => void;
@@ -67,12 +54,9 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
     content: "",
     created_at: new Date(),
     images: [],
-    tags: "", // Simple string
+    tags: "",
     isLoading: false,
     showDatePicker: false,
-    isUploading: false,
-    uploadingImageIndex: null,
-    uploadProgress: "",
     nextImageId: 0,
 
     // Form actions
@@ -103,26 +87,6 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
             images: state.images.filter((img) => img.id !== id),
         })),
 
-    updateImageUrl: (id, newUrl) =>
-        set((state) => ({
-            images: state.images.map((img) =>
-                img.id === id ? { ...img, url: newUrl } : img
-            ),
-        })),
-
-    setImageAsUploaded: (id) =>
-        set((state) => ({
-            images: state.images.map((img) =>
-                img.id === id ? { ...img, isLocal: false } : img
-            ),
-        })),
-
-    // Upload actions
-    setUploading: (isUploading) => set({ isUploading }),
-    setUploadingImageIndex: (uploadingImageIndex) =>
-        set({ uploadingImageIndex }),
-    setUploadProgress: (uploadProgress) => set({ uploadProgress }),
-
     // UI actions
     setLoading: (isLoading) => set({ isLoading }),
     toggleDatePicker: (show) =>
@@ -132,11 +96,6 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
     isFormValid: () => {
         const state = get();
         return !!(state.mood && state.content.trim());
-    },
-
-    hasLocalImages: () => {
-        const state = get();
-        return state.images.some((img) => img.isLocal);
     },
 
     // Form management
@@ -162,9 +121,6 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
             tags: "",
             isLoading: false,
             showDatePicker: false,
-            isUploading: false,
-            uploadingImageIndex: null,
-            uploadProgress: "",
             nextImageId: 0,
         }),
 }));

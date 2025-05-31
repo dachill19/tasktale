@@ -60,7 +60,9 @@ const Tasks = () => {
                 const parsedDeadline = task.originalDeadline
                     ? DateTime.fromISO(task.originalDeadline, {
                           zone: "utc",
-                      }).toLocal().toJSDate()
+                      })
+                          .toLocal()
+                          .toJSDate()
                     : null;
                 setTaskToEdit({
                     id: task.id,
@@ -136,7 +138,7 @@ const Tasks = () => {
         { value: "today", label: "Today" },
     ];
 
-    if (loading && tasks.length === 0) {
+    if (loading) {
         return (
             <YStack
                 flex={1}
