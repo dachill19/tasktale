@@ -59,7 +59,7 @@ const formatDate = (dateString: string): string => {
     }
 };
 
-// ===== STORAGE UTILITIES =====
+// ===== STORAGE UTILITIES (FIXED VERSION) =====
 export const uploadImageToStorage = async (
     imageUri: string,
     userId: string
@@ -69,15 +69,19 @@ export const uploadImageToStorage = async (
         const timestamp = Date.now();
         const filename = `${userId}/${timestamp}.jpg`;
 
-        // Convert image URI to blob/file for upload
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
+        // Method for React Native/Expo - Use FormData
+        const formData = new FormData();
+        formData.append('file', {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: filename,
+        } as any);
 
         // Upload to Supabase storage
         const { data, error } = await supabase.storage
             .from("journal-images") // Make sure this bucket exists in your Supabase project
-            .upload(filename, blob, {
-                contentType: "image/*",
+            .upload(filename, formData, {
+                contentType: "image/jpeg",
                 upsert: false,
             });
 

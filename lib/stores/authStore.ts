@@ -30,6 +30,7 @@ interface AuthState {
     signInWithGoogle: () => Promise<{ error?: string }>;
     signOut: () => Promise<void>;
     clearError: () => void;
+    handleDeepLink: (url: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -53,21 +54,76 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
 
             // Set up auth state listener
-            supabase.auth.onAuthStateChange((event, session) => {
+            supabase.auth.onAuthStateChange(async (event, session) => {
+                console.log('Auth state changed:', event, session?.user?.email);
+                
                 set({
                     session,
                     user: session?.user ?? null,
                 });
 
-                if (event === "SIGNED_IN") {
-                    router.replace("/(main)");
+                if (event === "SIGNED_IN" && session) {
+                    // Small delay to ensure state is updated
+                    setTimeout(() => {
+                        router.replace("/(main)");
+                    }, 100);
                 } else if (event === "SIGNED_OUT") {
                     router.replace("/(auth)");
                 }
             });
+
+            // Handle initial deep link if exists
+            const initialUrl = await Linking.getInitialURL();
+            if (initialUrl) {
+                await get().handleDeepLink(initialUrl);
+            }
+
+            // Set up deep link listener
+            Linking.addEventListener('url', ({ url }) => {
+                get().handleDeepLink(url);
+            });
+
         } catch (error) {
             console.error("Auth initialization error:", error);
             set({ isInitialized: true });
+        }
+    },
+
+    // Handle deep link for OAuth callback
+    handleDeepLink: async (url: string) => {
+        try {
+            console.log('Handling deep link:', url);
+            
+            // Check if this is an auth callback
+            if (url.includes('#access_token=') || url.includes('?access_token=')) {
+                // Parse the URL manually since getSessionFromUrl doesn't exist
+                const urlParams = new URLSearchParams(url.split('#')[1] || url.split('?')[1]);
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                
+                if (accessToken) {
+                    // Set the session manually
+                    const { data, error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken || '',
+                    });
+
+                    if (error) {
+                        console.error('Error setting session:', error);
+                        return;
+                    }
+
+                    if (data.session) {
+                        console.log('Session set from URL:', data.session.user?.email);
+                        set({
+                            session: data.session,
+                            user: data.session.user,
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Deep link handling error:', error);
         }
     },
 
@@ -131,6 +187,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         try {
             const redirectUrl = Linking.createURL("/(main)");
+            console.log('Redirect URL:', redirectUrl);
+            
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
@@ -143,23 +201,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
 
             if (error) {
+                console.error('OAuth init error:', error);
                 return { error: `Google login failed: ${error.message}` };
             }
 
             if (data?.url) {
+                console.log('Opening auth session:', data.url);
+                
                 const result = await WebBrowser.openAuthSessionAsync(
                     data.url,
                     redirectUrl
                 );
 
-                if (result.type === "success") {
-                    const {
-                        data: { user },
-                    } = await supabase.auth.getUser();
-                    if (!user) {
-                        return {
-                            error: "Authentication failed. Please try again.",
-                        };
+                console.log('Auth session result:', result);
+
+                if (result.type === "success" && result.url) {
+                    // Handle the callback URL
+                    await get().handleDeepLink(result.url);
+                    
+                    // Double check if we got the session
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    
+                    if (sessionData.session) {
+                        console.log('Session confirmed:', sessionData.session.user?.email);
+                        set({
+                            session: sessionData.session,
+                            user: sessionData.session.user,
+                        });
+                        return {};
+                    } else {
+                        return { error: "Authentication failed. Please try again." };
                     }
                 } else if (result.type === "cancel") {
                     return { error: "Login cancelled" };
@@ -169,8 +240,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             } else {
                 return { error: "Failed to initialize Google login" };
             }
-
-            return {};
         } catch (error) {
             console.error("Google login error:", error);
             return { error: "Google login failed. Please try again." };

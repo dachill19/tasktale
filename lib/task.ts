@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { DateTime } from "luxon";
 
 // ===== TYPES =====
 export interface Task {
@@ -47,12 +48,15 @@ const handleError = (error: unknown, context: string): string => {
 
 const formatDate = (dateString: string): string => {
     try {
-        return new Date(dateString).toLocaleDateString("en-GB", {
+        const dt = DateTime.fromISO(dateString, { zone: "utc" }).toLocal();
+        console.log("formatDate input:", dateString, "output:", dt.toISO());
+        return dt.toLocaleString({
             day: "numeric",
             month: "long",
             year: "numeric",
         });
     } catch (error) {
+        console.error("formatDate error:", error);
         return "Invalid date";
     }
 };
@@ -90,7 +94,11 @@ export const createTask = async (
                 description: taskData.description || null,
                 priority: taskData.priority,
                 completed: false,
-                deadline: taskData.deadline?.toISOString() || null,
+                deadline: taskData.deadline
+                    ? DateTime.fromJSDate(taskData.deadline)
+                          .toUTC()
+                          .toISO()
+                    : null,
             })
             .select()
             .single();
@@ -168,41 +176,14 @@ export const getFilteredTasks = async (
                 query = query.eq("completed", true);
                 break;
             case "today": {
-                const now = new Date();
+                const now = DateTime.local();
+                const startOfDayLocal = now.startOf("day").toUTC().toISO();
+                const endOfDayLocal = now.endOf("day").toUTC().toISO();
 
-                // getTimezoneOffset mengembalikan selisih (dalam menit) dari UTC ke lokal
-                // contoh: WIB (UTC+7) ⇒ -420 (karena UTC - local = -420 menit)
-                const offsetInMs = now.getTimezoneOffset() * 60 * 1000;
-
-                // Waktu lokal (jam 00:00 dan 23:59:59)
-                const startOfDayLocal = new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate(),
-                    0,
-                    0,
-                    0,
-                    0
-                );
-                const endOfDayLocal = new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate(),
-                    23,
-                    59,
-                    59,
-                    999
-                );
-
-                // Konversi waktu lokal menjadi waktu UTC dengan mengurangkan offset lokal
-                const startUTC = new Date(
-                    startOfDayLocal.getTime() - offsetInMs
-                ).toISOString();
-                const endUTC = new Date(
-                    endOfDayLocal.getTime() - offsetInMs
-                ).toISOString();
-
-                query = query.gte("deadline", startUTC).lte("deadline", endUTC);
+                query = query
+                    .eq("completed", false) // Hanya task yang belum selesai
+                    .gte("deadline", startOfDayLocal)
+                    .lte("deadline", endOfDayLocal);
                 break;
             }
         }
@@ -301,13 +282,16 @@ export const getTaskStats = async (
 
         if (error) return { success: false, error: error.message };
 
-        const now = new Date();
+        const now = DateTime.local();
         const stats = {
             total: tasks.length,
             completed: tasks.filter((t) => t.completed).length,
             pending: tasks.filter((t) => !t.completed).length,
             overdue: tasks.filter(
-                (t) => !t.completed && t.deadline && new Date(t.deadline) < now
+                (t) =>
+                    !t.completed &&
+                    t.deadline &&
+                    DateTime.fromISO(t.deadline, { zone: "utc" }).toLocal() < now
             ).length,
         };
 
@@ -331,7 +315,11 @@ export const updateTask = async (
                 title: taskData.title,
                 description: taskData.description || null,
                 priority: taskData.priority,
-                deadline: taskData.deadline?.toISOString() || null,
+                deadline: taskData.deadline
+                    ? DateTime.fromJSDate(taskData.deadline)
+                          .toUTC()
+                          .toISO()
+                    : null,
             })
             .eq("id", taskId);
 

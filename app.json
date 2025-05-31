@@ -9,14 +9,24 @@
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "ios": {
-            "supportsTablet": true
+            "supportsTablet": true,
+            "infoPlist": {
+                "NSCameraUsageDescription": "This app needs access to camera to take photos for journal entries.",
+                "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images for journal entries."
+            }
         },
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/logo.png",
                 "backgroundColor": "#ffffff"
             },
-            "edgeToEdgeEnabled": true
+            "edgeToEdgeEnabled": true,
+            "permissions": [
+                "CAMERA",
+                "READ_EXTERNAL_STORAGE",
+                "WRITE_EXTERNAL_STORAGE",
+                "READ_MEDIA_IMAGES"
+            ]
         },
         "web": {
             "bundler": "metro",
@@ -37,7 +47,14 @@
                     "backgroundColor": "#ffffff"
                 }
             ],
-            "expo-web-browser"
+            "expo-web-browser",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you share them in your journal entries.",
+                    "cameraPermission": "The app accesses your camera to let you take photos for your journal entries."
+                }
+            ]
         ],
         "experiments": {
             "typedRoutes": true

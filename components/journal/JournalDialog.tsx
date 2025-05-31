@@ -444,8 +444,8 @@ export function JournalDialog({
                                         <Button
                                             icon={<X size={14} color="white" />}
                                             position="absolute"
-                                            top={-5}
-                                            right={-5}
+                                            top={0}
+                                            right={0}
                                             size="$1"
                                             circular
                                             bg="$red10"

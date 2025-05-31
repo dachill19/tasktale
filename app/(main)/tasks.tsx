@@ -3,6 +3,7 @@ import TaskCard from "@/components/task/TaskCard";
 import { TaskDialog } from "@/components/task/TaskDialog";
 import { useTaskStore } from "@/lib/stores/taskStore";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { DateTime } from "luxon";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, RefreshControl } from "react-native";
 import { Button, Spinner, Text, YStack } from "tamagui";
@@ -57,7 +58,9 @@ const Tasks = () => {
             if (task) {
                 console.log("Setting taskToEdit:", task);
                 const parsedDeadline = task.originalDeadline
-                    ? new Date(task.originalDeadline)
+                    ? DateTime.fromISO(task.originalDeadline, {
+                          zone: "utc",
+                      }).toLocal().toJSDate()
                     : null;
                 setTaskToEdit({
                     id: task.id,
@@ -68,10 +71,9 @@ const Tasks = () => {
                         | "medium"
                         | "low",
                     completed: task.completed,
-                    deadline:
-                        parsedDeadline && !isNaN(parsedDeadline.getTime())
-                            ? parsedDeadline.toISOString()
-                            : null,
+                    deadline: parsedDeadline
+                        ? parsedDeadline.toISOString()
+                        : null,
                     sub_tasks:
                         task.subTasks?.map((st: any) => ({
                             id: st.id,

@@ -5,6 +5,7 @@ import { useTaskStore } from "@/lib/stores/taskStore";
 import { SubTask } from "@/lib/task";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Calendar, Plus, X } from "@tamagui/lucide-icons";
+import { DateTime } from "luxon";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { Alert, FlatList, Platform } from "react-native";
 import { Button, Dialog, Input, Text, TextArea, XStack, YStack } from "tamagui";
@@ -35,11 +36,13 @@ const showAlert = (title: string, message: string) => {
 };
 
 const formatDate = (deadline: Date): string => {
-    return deadline.toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    });
+    return DateTime.fromJSDate(deadline)
+        .toLocal()
+        .toLocaleString({
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
 };
 
 export function TaskDialog({

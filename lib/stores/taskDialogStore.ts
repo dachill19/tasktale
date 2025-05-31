@@ -1,4 +1,5 @@
 import { SubTask, TaskWithSubTasks } from "@/lib/task";
+import { DateTime } from "luxon";
 import { create } from "zustand";
 
 interface TaskDialogState {
@@ -85,7 +86,9 @@ export const useTaskDialogStore = create<TaskDialogState>((set) => ({
                     completed: st.completed,
                 })) || [];
             const parsedDeadline = task.deadline
-                ? new Date(task.deadline)
+                ? DateTime.fromISO(task.deadline, { zone: "utc" })
+                      .toLocal()
+                      .toJSDate()
                 : null;
             return {
                 title: task.title,
