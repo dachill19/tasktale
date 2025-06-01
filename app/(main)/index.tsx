@@ -199,7 +199,7 @@ const Dashboard = () => {
 
                     {/* Progress Tugas */}
                     <DashboardCard
-                        title="Progress Tugas"
+                        title="Task Progress"
                         icon=""
                         type="progress"
                         progress={taskProgress}
@@ -209,7 +209,7 @@ const Dashboard = () => {
 
                     {/* Mood Minggu Ini */}
                     <DashboardCard
-                        title="Mood Minggu Ini"
+                        title="Weekly Moods"
                         icon=""
                         type="weekly-mood"
                         journals={journalEntries}
@@ -217,7 +217,7 @@ const Dashboard = () => {
 
                     {/* Tugas Hari Ini */}
                     <DashboardCard
-                        title="Tugas Hari Ini"
+                        title="Today's Tasks"
                         icon=""
                         type="tasks"
                         tasks={todayTasks}
@@ -227,7 +227,7 @@ const Dashboard = () => {
 
                     {/* Jurnal Terbaru */}
                     <DashboardCard
-                        title="Jurnal Terbaru"
+                        title="Recent Journals"
                         icon=""
                         type="recent-journals"
                         journals={journalEntries}

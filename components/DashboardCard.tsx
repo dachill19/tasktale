@@ -131,8 +131,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                             alignItems="center"
                         >
                             <Text color="$gray11" fontSize="$3">
-                                {completedTasks || 0} dari {totalTasks || 0}{" "}
-                                tugas selesai
+                                {completedTasks || 0}/{totalTasks || 0} tasks
+                                completed
                             </Text>
                             <Text
                                 fontWeight="600"
@@ -157,7 +157,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                             alignItems="center"
                         >
                             <Text fontSize="$3" color="$gray10">
-                                {tasks.length} tugas
+                                {tasks.length} tasks
                             </Text>
                         </XStack>
 
@@ -249,7 +249,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                             >
                                 <Text fontSize="$4">🎉</Text>
                                 <Text color="$gray10" fontSize="$4">
-                                    Tidak ada tugas untuk hari ini
+                                    No tasks for today
                                 </Text>
                             </XStack>
                         )}
@@ -329,7 +329,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                             >
                                 <Text fontSize="$4">📔</Text>
                                 <Text color="$gray10" fontSize="$4">
-                                    Belum ada jurnal. Mulai menulis hari ini!
+                                    No journals yet. Start writing today!
                                 </Text>
                             </XStack>
                         )}
@@ -348,7 +348,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                         >
                             <Text fontSize="$4">📊</Text>
                             <Text color="$gray10" fontSize="$4">
-                                Belum ada data mood minggu ini
+                                No moods recorded this week
                             </Text>
                         </XStack>
                     );
@@ -400,9 +400,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                         {/* Summary Text */}
                         <Text textAlign="center" color="$gray11" fontSize="$3">
                             {weeklyMoodStats.length > 0 &&
-                                `Mood dominan: ${getMoodEmoji(
+                                `Most frequent mood: ${getMoodEmoji(
                                     weeklyMoodStats[0][0]
-                                )} (${weeklyMoodStats[0][1]} hari)`}
+                                )} (${weeklyMoodStats[0][1]} days)`}
                         </Text>
                     </YStack>
                 );

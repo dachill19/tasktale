@@ -1,6 +1,5 @@
 import { useAuthFormStore } from "@/lib/stores/authFormStore";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { Alert } from "react-native";
 import { Button, Input, Stack, Text, YStack } from "tamagui";
 
 export default function SignupForm() {
@@ -32,12 +31,6 @@ export default function SignupForm() {
 
         if (result.error) {
             setError(result.error);
-        } else {
-            Alert.alert(
-                "Check your email",
-                "We've sent you a confirmation link to complete your registration.",
-                [{ text: "OK", onPress: switchForm }]
-            );
         }
     };
 
@@ -62,7 +55,7 @@ export default function SignupForm() {
 
             <Stack gap="$5" width="100%">
                 <Input
-                    placeholder="User Name"
+                    placeholder="Username"
                     value={username}
                     onChangeText={setUsername}
                     placeholderTextColor="$gray10"

@@ -49,7 +49,7 @@ const handleError = (error: unknown, context: string): string => {
 
 const formatDate = (dateString: string): string => {
     try {
-        return new Date(dateString).toLocaleDateString("en-GB", {
+        return new Date(dateString).toLocaleDateString("en-US", {
             day: "numeric",
             month: "long",
             year: "numeric",

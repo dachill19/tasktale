@@ -165,9 +165,6 @@ export function JournalDialog({
                     >
                         Add Journal
                     </Dialog.Title>
-                    <Dialog.Description>
-                        Create a new journal entry.
-                    </Dialog.Description>
 
                     {/* Mood Selection */}
                     <YStack gap="$2">

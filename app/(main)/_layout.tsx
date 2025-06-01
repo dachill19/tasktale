@@ -212,7 +212,7 @@ export default function Layout() {
                     backgroundColor="$background"
                 >
                     <Text fontSize="$8" fontWeight="bold" color="$green10">
-                        Tambah Baru
+                        Add New
                     </Text>
                     <Button
                         size="$5"
