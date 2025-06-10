@@ -6,6 +6,12 @@ import { supabase } from "./supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
+export interface ServiceResponse<T> {
+    success: boolean;
+    data?: T;
+    error?: string;
+}
+
 export async function loginWithEmail(email: string, password: string) {
     return await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -97,5 +103,22 @@ export async function logout() {
     } else {
         Alert.alert("Logout Berhasil");
         router.replace("/auth");
+    }
+}
+
+export async function getCurrentUserProfile(): Promise<ServiceResponse<{ id: string; full_name: string }>> {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            return { success: false, error: error?.message || "User not authenticated" };
+        }
+
+        const full_name = user.user_metadata?.full_name || "User";
+        return { success: true, data: { id: user.id, full_name } };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error occurred",
+        };
     }
 }

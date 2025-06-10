@@ -48,7 +48,7 @@ const handleError = (error: unknown, context: string): string => {
 
 const formatDate = (dateString: string): string => {
     try {
-        const dt = DateTime.fromISO(dateString, { zone: "utc" }).toLocal();
+        const dt = DateTime.fromISO(dateString, { zone: "utc" }).setZone("Asia/Jakarta");
         console.log("formatDate input:", dateString, "output:", dt.toISO());
         return dt.toLocaleString({
             day: "numeric",
@@ -96,6 +96,7 @@ export const createTask = async (
                 completed: false,
                 deadline: taskData.deadline
                     ? DateTime.fromJSDate(taskData.deadline)
+                          .setZone("Asia/Jakarta")
                           .toUTC()
                           .toISO()
                     : null,
@@ -176,23 +177,27 @@ export const getFilteredTasks = async (
                 query = query.eq("completed", true);
                 break;
             case "today": {
-                const now = DateTime.local();
+                const now = DateTime.local({ zone: "Asia/Jakarta" });
+                const startOfDayLocal = now.startOf("day");
                 const endOfDayLocal = now.endOf("day");
-                
-                // Convert ke UTC untuk query database
-                const nowUTC = now.toUTC().toISO();
+
+                const startOfDayUTC = startOfDayLocal.toUTC().toISO();
                 const endOfDayUTC = endOfDayLocal.toUTC().toISO();
 
                 query = query
-                    .eq("completed", false) // Hanya task yang belum selesai
-                    .gte("deadline", nowUTC) // Deadline >= sekarang (tidak termasuk yang lewat)
-                    .lte("deadline", endOfDayUTC); // Deadline <= akhir hari ini
+                    .gte("deadline", startOfDayUTC)
+                    .lte("deadline", endOfDayUTC);
                 break;
             }
+            case "all":
+            default:
+                break;
         }
 
         const { data: tasks, error } = await query;
         if (error) return { success: false, error: error.message };
+
+        console.log("Filtered tasks:", tasks);
         return { success: true, data: tasks || [] };
     } catch (error) {
         return {
@@ -207,12 +212,22 @@ export const updateTaskStatus = async (
     completed: boolean
 ): Promise<ServiceResponse<void>> => {
     try {
-        const { error } = await supabase
+        const { error: taskError } = await supabase
             .from("tasks")
             .update({ completed })
             .eq("id", taskId);
 
-        if (error) return { success: false, error: error.message };
+        if (taskError) return { success: false, error: taskError.message };
+
+        const { error: subTaskError } = await supabase
+            .from("sub_tasks")
+            .update({ completed })
+            .eq("task_id", taskId);
+
+        if (subTaskError) {
+            console.warn("Warning updating sub-tasks:", subTaskError.message);
+        }
+
         return { success: true };
     } catch (error) {
         return {
@@ -285,7 +300,7 @@ export const getTaskStats = async (
 
         if (error) return { success: false, error: error.message };
 
-        const now = DateTime.local();
+        const now = DateTime.local({ zone: "Asia/Jakarta" });
         const stats = {
             total: tasks.length,
             completed: tasks.filter((t) => t.completed).length,
@@ -294,7 +309,7 @@ export const getTaskStats = async (
                 (t) =>
                     !t.completed &&
                     t.deadline &&
-                    DateTime.fromISO(t.deadline, { zone: "utc" }).toLocal() < now
+                    DateTime.fromISO(t.deadline, { zone: "utc" }).setZone("Asia/Jakarta") < now
             ).length,
         };
 
@@ -320,6 +335,7 @@ export const updateTask = async (
                 priority: taskData.priority,
                 deadline: taskData.deadline
                     ? DateTime.fromJSDate(taskData.deadline)
+                          .setZone("Asia/Jakarta")
                           .toUTC()
                           .toISO()
                     : null,
@@ -392,10 +408,10 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
         completedCount: totalSubTasks > 0 ? completedSubTasks : undefined,
         totalCount: totalSubTasks > 0 ? totalSubTasks : undefined,
         subTasks: task.sub_tasks?.map((st) => ({
-            id: st.id,
+            id: st.id!,
             title: st.title,
             completed: st.completed,
-        })),
+        })) || [],
         completed: task.completed,
         originalPriority: task.priority,
     };

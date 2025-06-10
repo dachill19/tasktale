@@ -1,12 +1,14 @@
+// app/(main)/journals.tsx
 import FilterToggleGroup from "@/components/FilterToggleGroup";
 import JournalCard from "@/components/journal/JournalCard";
 import { JournalDialog } from "@/components/journal/JournalDialog";
+import { JournalsSkeleton } from "@/components/skeletons/JournalsSkeleton"; // Add this import
 import { JournalFormData as ServiceJournalFormData } from "@/lib/journal";
-import { useJournalStore } from "@/lib/stores/journalStore"; // Adjust import path as needed
+import { useJournalStore } from "@/lib/stores/journalStore";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, RefreshControl } from "react-native";
-import { Spinner, Text, YStack } from "tamagui";
+import { Text, YStack } from "tamagui";
 
 // Type untuk form data dari dialog
 type DialogJournalFormData = {
@@ -153,21 +155,7 @@ const Journals = () => {
     ];
 
     if (loading) {
-        return (
-            <YStack
-                flex={1}
-                backgroundColor="$background"
-                paddingHorizontal="$4"
-                alignItems="center"
-                justifyContent="center"
-                paddingBottom={100}
-            >
-                <Spinner size="large" color="$green10" />
-                <Text marginTop="$2" fontSize="$5" color="$green10">
-                    Loading journals...
-                </Text>
-            </YStack>
-        );
+        return <JournalsSkeleton />; // Use JournalsSkeleton instead of Spinner
     }
 
     return (

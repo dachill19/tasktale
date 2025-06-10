@@ -1,242 +1,175 @@
-import DashboardCard from "@/components/DashboardCard";
-import { format } from "date-fns";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
-import { Text, YStack } from "tamagui";
+import DashboardCard from '@/components/DashboardCard';
+import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
+import { useDashboardStore } from '@/lib/stores/dashboardStore';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { DateTime } from 'luxon';
+import { useCallback } from 'react';
+import { ScrollView } from 'react-native';
+import { Text, YStack } from 'tamagui';
 
-type TaskPriority = "high" | "medium" | "low";
+   const Dashboard = () => {
+     const router = useRouter();
+     const {
+       greeting,
+       userName,
+       todayTasks,
+       allTasks,
+       journalEntries,
+       loading,
+       error,
+       fetchData,
+       toggleTask,
+       isTaskOverdue,
+       isTaskUpcoming,
+     } = useDashboardStore();
 
-interface Task {
-    id: string;
-    title: string;
-    completed: boolean;
-    priority: TaskPriority;
-    dueDate: string;
-}
+     const today = DateTime.local({ zone: 'Asia/Jakarta' });
 
-interface JournalEntry {
-    id: string;
-    date: string;
-    mood: string;
-    content: string;
-    hasMedia: boolean;
-}
+     useFocusEffect(
+       useCallback(() => {
+         fetchData();
+       }, [fetchData])
+     );
 
-const Dashboard = () => {
-    const today = new Date();
-    const router = useRouter();
-    const [greeting, setGreeting] = useState("");
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+     const overdueTasks = allTasks.filter((task) => task.dueDate && isTaskOverdue(task.dueDate));
+     const upcomingTasks = allTasks.filter((task) => task.dueDate && isTaskUpcoming(task.dueDate));
 
-    useEffect(() => {
-        const hours = today.getHours();
-        if (hours >= 4 && hours < 12) setGreeting("Good Morning");
-        else if (hours >= 12 && hours < 17) setGreeting("Good Afternoon");
-        else setGreeting("Good Evening");
+     const completedTasksCount = allTasks.filter((t) => t.completed).length;
+     const totalTasksCount = allTasks.length;
+     const taskProgress = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
-        setTasks([
-            {
-                id: "1",
-                title: "Menyelesaikan laporan proyek",
-                completed: false,
-                priority: "high",
-                dueDate: format(today, "yyyy-MM-dd"),
-            },
-            {
-                id: "2",
-                title: "Meeting dengan tim",
-                completed: true,
-                priority: "medium",
-                dueDate: format(today, "yyyy-MM-dd"),
-            },
-            {
-                id: "3",
-                title: "Beli hadiah untuk teman",
-                completed: false,
-                priority: "low",
-                dueDate: format(today, "yyyy-MM-dd"),
-            },
-            {
-                id: "4",
-                title: "Review kode aplikasi",
-                completed: false,
-                priority: "medium",
-                dueDate: format(today, "yyyy-MM-dd"),
-            },
-            {
-                id: "5",
-                title: "Panggilan dengan klen",
-                completed: true,
-                priority: "high",
-                dueDate: format(today, "yyyy-MM-dd"),
-            },
-        ]);
+     const hasTodayJournal = journalEntries.some((entry) => {
+       try {
+         return DateTime.fromISO(entry.date, { zone: 'Asia/Jakarta' }).hasSame(today, 'day');
+       } catch {
+         return false;
+       }
+     });
 
-        setJournalEntries([
-            {
-                id: "1",
-                date: format(
-                    new Date().setDate(today.getDate() - 1),
-                    "yyyy-MM-dd"
-                ),
-                mood: "happy",
-                content:
-                    "Hari ini sangat menyenangkan! Bertemu dengan teman lama dan berhasil menyelesaikan proyek besar. Merasa sangat bersyukur dengan pencapaian hari ini.",
-                hasMedia: true,
-            },
-            {
-                id: "2",
-                date: format(
-                    new Date().setDate(today.getDate() - 2),
-                    "yyyy-MM-dd"
-                ),
-                mood: "excited",
-                content:
-                    "Bekerja seperti biasa dan pulang agak terlambat. Hari yang cukup produktif meskipun sedikit lelah.",
-                hasMedia: false,
-            },
-            {
-                id: "3",
-                date: format(
-                    new Date().setDate(today.getDate() - 3),
-                    "yyyy-MM-dd"
-                ),
-                mood: "sad",
-                content:
-                    "Hari yang cukup menantang. Ada beberapa masalah teknis yang harus diselesaikan dan deadline yang ketat.",
-                hasMedia: true,
-            },
-            {
-                id: "2",
-                date: format(
-                    new Date().setDate(today.getDate() - 2),
-                    "yyyy-MM-dd"
-                ),
-                mood: "calm",
-                content:
-                    "Bekerja seperti biasa dan pulang agak terlambat. Hari yang cukup produktif meskipun sedikit lelah.",
-                hasMedia: false,
-            },
-            {
-                id: "2",
-                date: format(
-                    new Date().setDate(today.getDate() - 2),
-                    "yyyy-MM-dd"
-                ),
-                mood: "neutral",
-                content:
-                    "Bekerja seperti biasa dan pulang agak terlambat. Hari yang cukup produktif meskipun sedikit lelah.",
-                hasMedia: false,
-            },
-            {
-                id: "2",
-                date: format(
-                    new Date().setDate(today.getDate() - 2),
-                    "yyyy-MM-dd"
-                ),
-                mood: "tired",
-                content:
-                    "Bekerja seperti biasa dan pulang agak terlambat. Hari yang cukup produktif meskipun sedikit lelah.",
-                hasMedia: false,
-            },
-            {
-                id: "2",
-                date: format(
-                    new Date().setDate(today.getDate() - 2),
-                    "yyyy-MM-dd"
-                ),
-                mood: "anggry",
-                content:
-                    "Bekerja seperti biasa dan pulang agak terlambat. Hari yang cukup produktif meskipun sedikit lelah.",
-                hasMedia: false,
-            },
-        ]);
-    }, []);
+     if (loading) {
+       return <DashboardSkeleton />;
+     }
 
-    const completedTasks = tasks.filter((t) => t.completed).length;
-    const taskProgress =
-        tasks.length > 0
-            ? Math.round((completedTasks / tasks.length) * 100)
-            : 0;
-    const todayTasks = tasks.filter(
-        (t) => t.dueDate === format(today, "yyyy-MM-dd")
-    );
-    const hasTodayJournal = journalEntries.some(
-        (entry) => entry.date === format(today, "yyyy-MM-dd")
-    );
+     if (error) {
+       return (
+         <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
+           <Text color="$red10" textAlign="center" marginBottom="$2">
+             Error: {error}
+           </Text>
+           <Text
+             color="$blue10"
+             textDecorationLine="underline"
+             onPress={() => {
+               fetchData();
+             }}
+           >
+             Tap to retry
+           </Text>
+         </YStack>
+       );
+     }
 
-    const toggleTask = (taskId: string) => {
-        setTasks(
-            tasks.map((t) =>
-                t.id === taskId ? { ...t, completed: !t.completed } : t
-            )
-        );
-    };
+     return (
+       <YStack
+         flex={1}
+         backgroundColor="$background"
+         paddingHorizontal="$4"
+         alignItems="center"
+       >
+         <ScrollView
+           showsVerticalScrollIndicator={false}
+           contentContainerStyle={{ paddingBottom: 100 }}
+         >
+           <YStack>
+             <YStack alignItems="center" marginVertical="$4">
+               <Text fontSize="$8" fontWeight="bold" color="$color10">
+                 {greeting}, {userName}!
+               </Text>
+               <Text color="$gray10" fontSize="$4" fontWeight="500">
+                 {today.toFormat('EEEE, d MMMM yyyy')}
+               </Text>
+             </YStack>
 
-    return (
-        <YStack
-            flex={1}
-            backgroundColor="$background"
-            paddingHorizontal="$4"
-            alignItems="center"
-        >
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            >
-                <YStack>
-                    {/* Header Greeting */}
-                    <YStack alignItems="center" marginVertical="$4">
-                        <Text fontSize="$8" fontWeight="bold" color="$color10">
-                            {greeting}, User!
-                        </Text>
-                        <Text color="$gray10" fontSize="$4" fontWeight="500">
-                            {format(today, "EEEE, d MMMM yyyy")}
-                        </Text>
-                    </YStack>
+             <DashboardCard
+               title="Task Progress"
+               icon="📈"
+               type="progress"
+               progress={taskProgress}
+               completedTasks={completedTasksCount}
+               totalTasks={totalTasksCount}
+             />
 
-                    {/* Progress Tugas */}
-                    <DashboardCard
-                        title="Task Progress"
-                        icon=""
-                        type="progress"
-                        progress={taskProgress}
-                        completedTasks={completedTasks}
-                        totalTasks={tasks.length}
-                    />
+             {overdueTasks.length > 0 && (
+               <DashboardCard
+                 title="Overdue Tasks"
+                 icon="⚠️"
+                 type="overdue-display"
+                 tasks={overdueTasks}
+                 onViewAllTasks={() => router.push('/tasks')}
+               />
+             )}
 
-                    {/* Mood Minggu Ini */}
-                    <DashboardCard
-                        title="Weekly Moods"
-                        icon=""
-                        type="weekly-mood"
-                        journals={journalEntries}
-                    />
+             <DashboardCard
+               title="Today's Tasks"
+               icon="📅"
+               type="tasks"
+               tasks={todayTasks}
+               onToggleTask={toggleTask}
+               onViewAllTasks={() => router.push('/tasks')}
+             />
 
-                    {/* Tugas Hari Ini */}
-                    <DashboardCard
-                        title="Today's Tasks"
-                        icon=""
-                        type="tasks"
-                        tasks={todayTasks}
-                        onToggleTask={toggleTask}
-                        onViewAllTasks={() => router.push("/tasks")}
-                    />
+             <DashboardCard
+               title="Weekly Mood"
+               icon="📊"
+               type="weekly-mood"
+               journals={journalEntries}
+             />
 
-                    {/* Jurnal Terbaru */}
-                    <DashboardCard
-                        title="Recent Journals"
-                        icon=""
-                        type="recent-journals"
-                        journals={journalEntries}
-                        onViewAllJournals={() => router.push("/journals")}
-                    />
-                </YStack>
-            </ScrollView>
-        </YStack>
-    );
-};
+             <DashboardCard
+               title="Recent Journals"
+               icon="📔"
+               type="recent-journals"
+               journals={journalEntries}
+               onViewAllJournals={() => router.push('/journals')}
+             />
 
-export default Dashboard;
+             {!hasTodayJournal && (
+               <YStack
+                 backgroundColor="$blue2"
+                 borderRadius="$4"
+                 borderWidth={1}
+                 borderColor="$blue8"
+                 padding="$4"
+                 marginBottom="$4"
+               >
+                 <Text
+                   fontSize="$5"
+                   fontWeight="600"
+                   color="$blue10"
+                   marginBottom="$2"
+                 >
+                   📝 Don't forget to journal today!
+                 </Text>
+                 <Text color="$blue11" fontSize="$4">
+                   Take a moment to reflect on your day and track your mood.
+                 </Text>
+               </YStack>
+             )}
+
+             {upcomingTasks.length > 0 && upcomingTasks.length <= 5 && (
+               <DashboardCard
+                 title="Upcoming Tasks"
+                 icon="📋"
+                 type="tasks"
+                 tasks={upcomingTasks.slice(0, 3)}
+                 onToggleTask={toggleTask}
+                 onViewAllTasks={() => router.push('/tasks')}
+               />
+             )}
+           </YStack>
+         </ScrollView>
+       </YStack>
+     );
+   };
+
+   export default Dashboard;
