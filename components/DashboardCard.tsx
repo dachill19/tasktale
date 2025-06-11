@@ -23,14 +23,13 @@ interface JournalItem {
 
 interface DashboardCardProps {
     title: string;
-    icon: string;
+    icon: React.ReactNode;
     type:
         | "progress"
         | "tasks"
         | "recent-journals"
         | "weekly-mood"
-        | "overdue-tasks"
-        | "overdue-display";
+        | "overdue-tasks";
     progress?: number;
     completedTasks?: number;
     totalTasks?: number;
@@ -256,7 +255,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             <XStack
                                                 key={subTask.id}
                                                 alignItems="center"
-                                                paddingLeft="$6"
+                                                paddingLeft="$5"
                                                 paddingVertical="$1"
                                             >
                                                 <Text
@@ -542,114 +541,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             <XStack
                                                 key={subTask.id}
                                                 alignItems="center"
-                                                paddingLeft="$6"
-                                                paddingVertical="$1"
-                                            >
-                                                <Text
-                                                    color={
-                                                        subTask.completed
-                                                            ? "$gray8"
-                                                            : "$color"
-                                                    }
-                                                    textDecorationLine={
-                                                        subTask.completed
-                                                            ? "line-through"
-                                                            : "none"
-                                                    }
-                                                    fontSize="$3"
-                                                >
-                                                    - {subTask.title}
-                                                </Text>
-                                            </XStack>
-                                        ))}
-                                    </YStack>
-                                ))}
-                            </YStack>
-                        ) : (
-                            <XStack
-                                alignItems="center"
-                                gap="$2"
-                                paddingVertical="$3"
-                            >
-                                <Text fontSize="$4">🎉</Text>
-                                <Text color="$gray10" fontSize="$4">
-                                    No overdue tasks
-                                </Text>
-                            </XStack>
-                        )}
-                    </YStack>
-                );
-
-            case "overdue-display":
-                const overdueDisplayTasks = tasks.filter(
-                    (task) =>
-                        !task.completed &&
-                        task.dueDate &&
-                        isTaskOverdue(task.dueDate)
-                );
-
-                return (
-                    <YStack gap="$3">
-                        <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Text fontSize="$3" color="$gray10">
-                                {overdueDisplayTasks.length} overdue tasks
-                            </Text>
-                        </XStack>
-                        {overdueDisplayTasks.length ? (
-                            <YStack gap="$1">
-                                {overdueDisplayTasks.map((task, index) => (
-                                    <YStack key={task.id}>
-                                        <XStack
-                                            alignItems="center"
-                                            paddingVertical="$2"
-                                            borderBottomWidth={
-                                                index <
-                                                overdueDisplayTasks.length - 1
-                                                    ? 1
-                                                    : 0
-                                            }
-                                            borderBottomColor="$borderColor"
-                                        >
-                                            <XStack
-                                                alignItems="center"
-                                                gap="$3"
-                                                flex={1}
-                                            >
-                                                <View
-                                                    width={12}
-                                                    height={12}
-                                                    borderRadius={6}
-                                                    backgroundColor={getPriorityColor(
-                                                        task.priority
-                                                    )}
-                                                />
-                                                <YStack flex={1}>
-                                                    <Text
-                                                        color="$color"
-                                                        fontSize="$4"
-                                                    >
-                                                        {task.title}
-                                                    </Text>
-                                                    <Text
-                                                        color="$red10"
-                                                        fontSize="$3"
-                                                    >
-                                                        Due:{" "}
-                                                        {formatDate(
-                                                            task.dueDate!
-                                                        )}
-                                                    </Text>
-                                                </YStack>
-                                            </XStack>
-                                        </XStack>
-                                        {task.subTasks?.map((subTask) => (
-                                            <XStack
-                                                key={subTask.id}
-                                                alignItems="center"
-                                                paddingLeft="$6"
+                                                paddingLeft="$5"
                                                 paddingVertical="$1"
                                             >
                                                 <Text
@@ -714,20 +606,17 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 marginBottom="$3"
             >
                 <XStack alignItems="center" gap="$2">
-                    {icon && <Text fontSize="$5">{icon}</Text>}
+                    {icon && <Text>{icon}</Text>}
                     <Text fontWeight="600" fontSize="$6" color="$color12">
                         {title}
                     </Text>
                 </XStack>
                 {(type === "tasks" ||
                     type === "recent-journals" ||
-                    type === "overdue-tasks" ||
-                    type === "overdue-display") && (
+                    type === "overdue-tasks") && (
                     <TouchableOpacity
                         onPress={
-                            type === "tasks" ||
-                            type === "overdue-tasks" ||
-                            type === "overdue-display"
+                            type === "tasks" || type === "overdue-tasks"
                                 ? onViewAllTasks
                                 : onViewAllJournals
                         }
