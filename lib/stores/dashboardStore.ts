@@ -3,11 +3,7 @@ import { DateTime } from "luxon";
 import { create } from "zustand";
 import { getCurrentUserProfile } from "../auth";
 import { getFilteredJournals, transformJournalForCard } from "../journal";
-import {
-    getFilteredTasks,
-    transformTaskForCard,
-    updateTaskStatus,
-} from "../task";
+import { getFilteredTasks, transformTaskForCard } from "../task";
 
 type TaskPriority = "high" | "medium" | "low";
 
@@ -37,7 +33,6 @@ interface DashboardState {
     loading: boolean;
     error: string | null;
     fetchData: () => Promise<void>;
-    toggleTask: (taskId: string) => Promise<void>;
     safeFormatDate: (dateValue: any) => string;
     isTaskOverdue: (dueDate: string) => boolean;
     isTaskUpcoming: (dueDate: string) => boolean;
@@ -251,64 +246,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
                 set({ error: "An unexpected error occurred" });
             } finally {
                 set({ loading: false });
-            }
-        },
-
-        toggleTask: async (taskId: string) => {
-            const taskToUpdate = get().todayTasks.find((t) => t.id === taskId);
-            if (!taskToUpdate) return;
-
-            const newCompletedStatus = !taskToUpdate.completed;
-
-            try {
-                const updateResponse = await updateTaskStatus(
-                    taskId,
-                    newCompletedStatus
-                );
-
-                if (updateResponse.success) {
-                    set((state) => ({
-                        todayTasks: state.todayTasks.map((t) =>
-                            t.id === taskId
-                                ? {
-                                      ...t,
-                                      completed: newCompletedStatus,
-                                      subTasks:
-                                          t.subTasks?.map((subTask) => ({
-                                              ...subTask,
-                                              completed: newCompletedStatus,
-                                          })) || [],
-                                  }
-                                : t
-                        ),
-                        allTasks: state.allTasks.map((t) =>
-                            t.id === taskId
-                                ? {
-                                      ...t,
-                                      completed: newCompletedStatus,
-                                      subTasks:
-                                          t.subTasks?.map((subTask) => ({
-                                              ...subTask,
-                                              completed: newCompletedStatus,
-                                          })) || [],
-                                  }
-                                : t
-                        ),
-                    }));
-                } else {
-                    console.error(
-                        "Failed to update task status:",
-                        updateResponse.error
-                    );
-                    set({
-                        error: `Failed to update task: ${updateResponse.error}`,
-                    });
-                    setTimeout(() => set({ error: null }), 3000);
-                }
-            } catch (err) {
-                console.error("Error updating task status:", err);
-                set({ error: "An error occurred while updating the task" });
-                setTimeout(() => set({ error: null }), 3000);
             }
         },
     };

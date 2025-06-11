@@ -2,7 +2,15 @@ import { ChevronRight } from "@tamagui/lucide-icons";
 import { DateTime } from "luxon";
 import React from "react";
 import { TouchableOpacity } from "react-native";
-import { Progress, Separator, Text, View, XStack, YStack } from "tamagui";
+import {
+    Progress,
+    Separator,
+    Stack,
+    Text,
+    View,
+    XStack,
+    YStack,
+} from "tamagui";
 
 interface TaskItem {
     id: string;
@@ -58,7 +66,6 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
     completedTasks,
     totalTasks,
     tasks = [],
-    onToggleTask,
     onViewAllTasks,
     journals = [],
     onViewAllJournals,
@@ -82,11 +89,24 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
             case "high":
                 return "$red10";
             case "medium":
-                return "$yellow10";
+                return "$orange10";
             case "low":
                 return "$green10";
             default:
                 return "$gray10";
+        }
+    };
+
+    const getPriorityBgColor = (priority: "high" | "medium" | "low") => {
+        switch (priority) {
+            case "high":
+                return "$red4";
+            case "medium":
+                return "$orange4";
+            case "low":
+                return "$green4";
+            default:
+                return "$gray4";
         }
     };
 
@@ -127,84 +147,140 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         return sortedMoods;
     };
 
+    const renderPriorityBadge = (priority: "high" | "medium" | "low") => (
+        <Stack
+            bg={getPriorityBgColor(priority)}
+            borderRadius="$8"
+            padding="$2"
+            alignItems="center"
+        >
+            <View
+                width={12}
+                height={12}
+                backgroundColor={getPriorityColor(priority)}
+                borderRadius="$10"
+            />
+        </Stack>
+    );
+
+    const renderEmptyState = (
+        emoji: string,
+        title: string,
+        subtitle: string,
+        bgColor: string = "$gray2"
+    ) => (
+        <YStack
+            alignItems="center"
+            justifyContent="center"
+            paddingVertical="$6"
+            borderRadius="$4"
+            backgroundColor={bgColor}
+            gap="$2"
+        >
+            <Text fontSize="$7">{emoji}</Text>
+            <YStack alignItems="center" gap="$1">
+                <Text color="$gray12" fontSize="$4" fontWeight="600">
+                    {title}
+                </Text>
+                <Text color="$gray10" fontSize="$3">
+                    {subtitle}
+                </Text>
+            </YStack>
+        </YStack>
+    );
+
     const renderContent = () => {
         switch (type) {
             case "progress":
                 return (
-                    <YStack gap="$3">
-                        <Progress
-                            value={progress || 0}
-                            height="$1.5"
-                            backgroundColor="$gray5"
-                        >
-                            <Progress.Indicator backgroundColor="$blue10" />
-                        </Progress>
-                        <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Text color="$gray11" fontSize="$3">
-                                {completedTasks || 0}/{totalTasks || 0} tasks
-                                completed
-                            </Text>
-                            <Text
-                                fontWeight="600"
-                                fontSize="$4"
-                                color={
-                                    (progress || 0) === 100
-                                        ? "$green10"
-                                        : "$blue10"
-                                }
+                    <YStack gap="$4">
+                        <YStack gap="$3">
+                            <Progress
+                                value={progress || 0}
+                                height="$1"
+                                backgroundColor="$gray4"
+                                borderRadius="$10"
                             >
-                                {progress || 0}%
-                            </Text>
-                        </XStack>
+                                <Progress.Indicator
+                                    backgroundColor="$blue9"
+                                    borderRadius="$10"
+                                />
+                            </Progress>
+                            <XStack
+                                justifyContent="space-between"
+                                alignItems="center"
+                            >
+                                <Text
+                                    color="$gray11"
+                                    fontSize="$3"
+                                    fontWeight="500"
+                                >
+                                    {completedTasks || 0} of {totalTasks || 0}{" "}
+                                    completed
+                                </Text>
+                                <XStack
+                                    bg={
+                                        (progress || 0) === 100
+                                            ? "$green3"
+                                            : "$blue3"
+                                    }
+                                    paddingHorizontal="$3"
+                                    paddingVertical="$1.5"
+                                    borderRadius="$8"
+                                >
+                                    <Text
+                                        fontWeight="600"
+                                        fontSize="$3"
+                                        color={
+                                            (progress || 0) === 100
+                                                ? "$green11"
+                                                : "$blue11"
+                                        }
+                                    >
+                                        {progress || 0}%
+                                    </Text>
+                                </XStack>
+                            </XStack>
+                        </YStack>
                     </YStack>
                 );
 
             case "tasks":
                 return (
-                    <YStack gap="$3">
+                    <YStack gap="$2">
                         <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
+                            bg="$purple3"
+                            paddingHorizontal="$3"
+                            paddingVertical="$1.5"
+                            borderRadius="$8"
+                            alignSelf="flex-start"
                         >
-                            <Text fontSize="$3" color="$gray10">
-                                {tasks.length} tasks
+                            <Text
+                                fontSize="$3"
+                                color="$purple11"
+                                fontWeight="600"
+                            >
+                                {tasks.length}{" "}
+                                {tasks.length === 1 ? "task" : "tasks"}
                             </Text>
                         </XStack>
+
                         {tasks.length ? (
-                            <YStack gap="$1">
+                            <YStack>
                                 {tasks.map((task, index) => (
                                     <YStack key={task.id}>
                                         <XStack
-                                            alignItems="center"
-                                            justifyContent="space-between"
+                                            alignItems="flex-start"
+                                            gap="$2"
                                             paddingVertical="$2"
-                                            borderBottomWidth={
-                                                index < tasks.length - 1 ? 1 : 0
-                                            }
-                                            borderBottomColor="$borderColor"
                                         >
-                                            <XStack
-                                                alignItems="center"
-                                                gap="$3"
-                                                flex={1}
-                                            >
-                                                <View
-                                                    width={12}
-                                                    height={12}
-                                                    borderRadius={6}
-                                                    backgroundColor={getPriorityColor(
-                                                        task.priority
-                                                    )}
-                                                />
+                                            {renderPriorityBadge(task.priority)}
+                                            <YStack flex={1} gap="$1.5">
                                                 <Text
-                                                    flex={1}
                                                     color={
                                                         task.completed
-                                                            ? "$gray8"
-                                                            : "$color"
+                                                            ? "$gray9"
+                                                            : "$gray12"
                                                     }
                                                     textDecorationLine={
                                                         task.completed
@@ -212,130 +288,145 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                                             : "none"
                                                     }
                                                     fontSize="$4"
+                                                    fontWeight="500"
+                                                    lineHeight="$1"
                                                 >
                                                     {task.title}
                                                 </Text>
-                                            </XStack>
-                                            <TouchableOpacity
-                                                onPress={() =>
-                                                    onToggleTask?.(task.id)
-                                                }
-                                            >
-                                                <View
-                                                    width={24}
-                                                    height={24}
-                                                    borderRadius={12}
-                                                    borderWidth={2}
-                                                    borderColor={
-                                                        task.completed
-                                                            ? "$green10"
-                                                            : "$gray8"
-                                                    }
-                                                    backgroundColor={
-                                                        task.completed
-                                                            ? "$green10"
-                                                            : "$background"
-                                                    }
-                                                    alignItems="center"
-                                                    justifyContent="center"
-                                                >
-                                                    {task.completed && (
-                                                        <Text
-                                                            color="white"
-                                                            fontSize="$2"
-                                                            fontWeight="bold"
-                                                        >
-                                                            ✓
-                                                        </Text>
+                                                {task.dueDate && (
+                                                    <Text
+                                                        fontSize="$3"
+                                                        color="$gray10"
+                                                    >
+                                                        Due{" "}
+                                                        {formatDate(
+                                                            task.dueDate
+                                                        )}
+                                                    </Text>
+                                                )}
+                                                {task.subTasks &&
+                                                    task.subTasks.length >
+                                                        0 && (
+                                                        <YStack gap="$2">
+                                                            {task.subTasks.map(
+                                                                (subTask) => (
+                                                                    <XStack
+                                                                        key={
+                                                                            subTask.id
+                                                                        }
+                                                                        alignItems="center"
+                                                                        gap="$2"
+                                                                    >
+                                                                        <View
+                                                                            width={
+                                                                                3
+                                                                            }
+                                                                            height={
+                                                                                3
+                                                                            }
+                                                                            backgroundColor="$gray8"
+                                                                            borderRadius="$10"
+                                                                        />
+                                                                        <Text
+                                                                            color={
+                                                                                subTask.completed
+                                                                                    ? "$gray8"
+                                                                                    : "$gray11"
+                                                                            }
+                                                                            textDecorationLine={
+                                                                                subTask.completed
+                                                                                    ? "line-through"
+                                                                                    : "none"
+                                                                            }
+                                                                            fontSize="$3"
+                                                                        >
+                                                                            {
+                                                                                subTask.title
+                                                                            }
+                                                                        </Text>
+                                                                    </XStack>
+                                                                )
+                                                            )}
+                                                        </YStack>
                                                     )}
-                                                </View>
-                                            </TouchableOpacity>
+                                            </YStack>
                                         </XStack>
-                                        {task.subTasks?.map((subTask) => (
-                                            <XStack
-                                                key={subTask.id}
-                                                alignItems="center"
-                                                paddingLeft="$5"
-                                                paddingVertical="$1"
-                                            >
-                                                <Text
-                                                    color={
-                                                        subTask.completed
-                                                            ? "$gray8"
-                                                            : "$color"
-                                                    }
-                                                    textDecorationLine={
-                                                        subTask.completed
-                                                            ? "line-through"
-                                                            : "none"
-                                                    }
-                                                    fontSize="$3"
-                                                >
-                                                    - {subTask.title}
-                                                </Text>
-                                            </XStack>
-                                        ))}
+                                        {index < tasks.length - 1 && (
+                                            <Separator
+                                                borderColor="$gray5"
+                                                marginVertical="$2"
+                                            />
+                                        )}
                                     </YStack>
                                 ))}
                             </YStack>
                         ) : (
-                            <XStack
-                                alignItems="center"
-                                gap="$2"
-                                paddingVertical="$3"
-                            >
-                                <Text fontSize="$4">🎉</Text>
-                                <Text color="$gray10" fontSize="$4">
-                                    No tasks for today
-                                </Text>
-                            </XStack>
+                            renderEmptyState(
+                                "🎉",
+                                "No tasks today",
+                                "Great job staying on top of things!"
+                            )
                         )}
                     </YStack>
                 );
 
             case "recent-journals":
                 return (
-                    <YStack gap="$3">
+                    <YStack gap="$2">
                         {journals.length ? (
-                            <YStack>
+                            <YStack gap="$2">
                                 {journals.slice(0, 3).map((entry, index) => (
-                                    <View key={entry.id}>
-                                        <YStack paddingVertical="$3">
+                                    <YStack key={entry.id}>
+                                        <YStack gap="$2" paddingVertical="$2">
                                             <XStack
-                                                alignItems="center"
                                                 justifyContent="space-between"
-                                                marginBottom="$2"
+                                                alignItems="flex-start"
                                             >
                                                 <XStack
                                                     gap="$2"
                                                     alignItems="center"
+                                                    flex={1}
                                                 >
-                                                    <Text fontSize="$5">
+                                                    <Text fontSize="$6">
                                                         {getMoodEmoji(
                                                             entry.mood
                                                         )}
                                                     </Text>
-                                                    <Text
-                                                        fontSize="$3"
-                                                        color="$gray10"
-                                                    >
-                                                        {formatDate(entry.date)}
-                                                    </Text>
+                                                    <YStack flex={1}>
+                                                        <Text
+                                                            fontSize="$4"
+                                                            color="$gray12"
+                                                            fontWeight="600"
+                                                        >
+                                                            {formatDate(
+                                                                entry.date
+                                                            )}
+                                                        </Text>
+                                                        <Text
+                                                            fontSize="$3"
+                                                            color="$gray10"
+                                                            textTransform="capitalize"
+                                                        >
+                                                            Feeling {entry.mood}
+                                                        </Text>
+                                                    </YStack>
                                                 </XStack>
                                                 {entry.hasMedia && (
                                                     <XStack
+                                                        bg="$blue3"
+                                                        paddingHorizontal="$2.5"
+                                                        paddingVertical="$1.5"
+                                                        borderRadius="$8"
                                                         alignItems="center"
-                                                        gap="$1"
+                                                        gap="$1.5"
                                                     >
-                                                        <Text
-                                                            fontSize="$2"
-                                                            color="$blue10"
-                                                        >
+                                                        <Text fontSize="$3">
                                                             📎
                                                         </Text>
                                                         <Text
                                                             fontSize="$2"
-                                                            color="$blue10"
+                                                            color="$blue11"
+                                                            fontWeight="500"
                                                         >
                                                             Media
                                                         </Text>
@@ -345,7 +436,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             <Text
                                                 fontSize="$3"
                                                 color="$gray11"
-                                                numberOfLines={3}
+                                                numberOfLines={2}
+                                                lineHeight="$2"
                                             >
                                                 {entry.content}
                                             </Text>
@@ -353,22 +445,20 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                         {index <
                                             Math.min(journals.length, 3) -
                                                 1 && (
-                                            <Separator borderColor="$borderColor" />
+                                            <Separator
+                                                borderColor="$gray5"
+                                                marginVertical="$1"
+                                            />
                                         )}
-                                    </View>
+                                    </YStack>
                                 ))}
                             </YStack>
                         ) : (
-                            <XStack
-                                alignItems="center"
-                                gap="$2"
-                                paddingVertical="$3"
-                            >
-                                <Text fontSize="$4">📔</Text>
-                                <Text color="$gray10" fontSize="$4">
-                                    No journals yet. Start writing today!
-                                </Text>
-                            </XStack>
+                            renderEmptyState(
+                                "📔",
+                                "No journals yet",
+                                "Start writing today!"
+                            )
                         )}
                     </YStack>
                 );
@@ -377,64 +467,98 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 const weeklyMoodStats = getWeeklyMoodStats();
 
                 if (weeklyMoodStats.length === 0) {
-                    return (
-                        <XStack
-                            alignItems="center"
-                            gap="$2"
-                            paddingVertical="$3"
-                        >
-                            <Text fontSize="$4">📊</Text>
-                            <Text color="$gray10" fontSize="$4">
-                                No moods recorded this week
-                            </Text>
-                        </XStack>
+                    return renderEmptyState(
+                        "📊",
+                        "No moods recorded",
+                        "Track your mood this week"
                     );
                 }
 
                 return (
-                    <YStack gap="$3">
+                    <YStack gap="$2">
                         <XStack
                             justifyContent="center"
                             alignItems="flex-end"
-                            gap="$3"
+                            gap="$2"
                             paddingVertical="$2"
                             flexWrap="wrap"
                         >
-                            {weeklyMoodStats.map(([mood, count], index) => (
-                                <YStack key={mood} alignItems="center" gap="$2">
-                                    <View
+                            {weeklyMoodStats
+                                .slice(0, 5)
+                                .map(([mood, count], index) => (
+                                    <YStack
+                                        key={mood}
                                         alignItems="center"
-                                        justifyContent="center"
-                                        marginBottom="$2"
+                                        gap="$2"
                                     >
-                                        <Text
-                                            fontSize={
+                                        <YStack
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            bg={
                                                 index === 0
-                                                    ? "$9"
-                                                    : index === 1
-                                                    ? "$8"
-                                                    : "$7"
+                                                    ? "$green3"
+                                                    : "$gray3"
                                             }
+                                            borderRadius="$8"
+                                            width={index === 0 ? 56 : 48}
+                                            height={index === 0 ? 56 : 48}
                                         >
-                                            {getMoodEmoji(mood)}
-                                        </Text>
-                                    </View>
-                                    <Text
-                                        fontWeight="600"
-                                        fontSize="$4"
-                                        color="$color12"
-                                    >
-                                        {count}
-                                    </Text>
-                                </YStack>
-                            ))}
+                                            <Text
+                                                fontSize={
+                                                    index === 0 ? "$7" : "$6"
+                                                }
+                                            >
+                                                {getMoodEmoji(mood)}
+                                            </Text>
+                                        </YStack>
+                                        <YStack alignItems="center" gap="$0.5">
+                                            <Text
+                                                fontWeight="600"
+                                                fontSize="$4"
+                                                color={
+                                                    index === 0
+                                                        ? "$green11"
+                                                        : "$gray12"
+                                                }
+                                            >
+                                                {count}
+                                            </Text>
+                                            <Text
+                                                fontSize="$2"
+                                                color="$gray10"
+                                                textTransform="capitalize"
+                                            >
+                                                {mood}
+                                            </Text>
+                                        </YStack>
+                                    </YStack>
+                                ))}
                         </XStack>
-                        <Text textAlign="center" color="$gray11" fontSize="$3">
-                            {weeklyMoodStats.length > 0 &&
-                                `Most frequent mood: ${getMoodEmoji(
-                                    weeklyMoodStats[0][0]
-                                )} (${weeklyMoodStats[0][1]} days)`}
-                        </Text>
+
+                        {weeklyMoodStats.length > 0 && (
+                            <XStack
+                                bg="$green3"
+                                padding="$3"
+                                borderRadius="$4"
+                                justifyContent="center"
+                            >
+                                <Text
+                                    textAlign="center"
+                                    color="$green11"
+                                    fontSize="$3"
+                                    fontWeight="500"
+                                >
+                                    Most frequent:{" "}
+                                    {getMoodEmoji(weeklyMoodStats[0][0])}{" "}
+                                    {weeklyMoodStats[0][0]} (
+                                    {weeklyMoodStats[0][1]}{" "}
+                                    {weeklyMoodStats[0][1] === 1
+                                        ? "day"
+                                        : "days"}
+                                    )
+                                </Text>
+                            </XStack>
+                        )}
                     </YStack>
                 );
 
@@ -447,134 +571,119 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 );
 
                 return (
-                    <YStack gap="$3">
+                    <YStack gap="$2">
                         <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
+                            bg="$red3"
+                            paddingHorizontal="$3"
+                            paddingVertical="$1.5"
+                            borderRadius="$8"
+                            alignSelf="flex-start"
                         >
-                            <Text fontSize="$3" color="$gray10">
-                                {overdueTasks.length} overdue tasks
+                            <Text fontSize="$3" color="$red11" fontWeight="600">
+                                {overdueTasks.length} overdue{" "}
+                                {overdueTasks.length === 1 ? "task" : "tasks"}
                             </Text>
                         </XStack>
+
                         {overdueTasks.length ? (
-                            <YStack gap="$1">
+                            <YStack>
                                 {overdueTasks.map((task, index) => (
                                     <YStack key={task.id}>
                                         <XStack
-                                            alignItems="center"
-                                            justifyContent="space-between"
+                                            alignItems="flex-start"
+                                            gap="$2"
                                             paddingVertical="$2"
-                                            borderBottomWidth={
-                                                index < overdueTasks.length - 1
-                                                    ? 1
-                                                    : 0
-                                            }
-                                            borderBottomColor="$borderColor"
                                         >
-                                            <XStack
-                                                alignItems="center"
-                                                gap="$3"
-                                                flex={1}
-                                            >
-                                                <View
-                                                    width={12}
-                                                    height={12}
-                                                    borderRadius={6}
-                                                    backgroundColor={getPriorityColor(
-                                                        task.priority
-                                                    )}
-                                                />
-                                                <YStack flex={1}>
+                                            {renderPriorityBadge(task.priority)}
+                                            <YStack flex={1} gap="$2">
+                                                <Text
+                                                    color="$gray12"
+                                                    fontSize="$4"
+                                                    fontWeight="500"
+                                                >
+                                                    {task.title}
+                                                </Text>
+                                                <XStack
+                                                    bg="$red3"
+                                                    paddingHorizontal="$2.5"
+                                                    paddingVertical="$1"
+                                                    borderRadius="$6"
+                                                    alignSelf="flex-start"
+                                                >
                                                     <Text
-                                                        color="$color"
-                                                        fontSize="$4"
+                                                        color="$red11"
+                                                        fontSize="$2"
+                                                        fontWeight="500"
                                                     >
-                                                        {task.title}
-                                                    </Text>
-                                                    <Text
-                                                        color="$red10"
-                                                        fontSize="$3"
-                                                    >
-                                                        Due:{" "}
+                                                        Due{" "}
                                                         {formatDate(
                                                             task.dueDate!
                                                         )}
                                                     </Text>
-                                                </YStack>
-                                            </XStack>
-                                            <TouchableOpacity
-                                                onPress={() =>
-                                                    onToggleTask?.(task.id)
-                                                }
-                                            >
-                                                <View
-                                                    width={24}
-                                                    height={24}
-                                                    borderRadius={12}
-                                                    borderWidth={2}
-                                                    borderColor={
-                                                        task.completed
-                                                            ? "$green10"
-                                                            : "$gray8"
-                                                    }
-                                                    backgroundColor={
-                                                        task.completed
-                                                            ? "$green10"
-                                                            : "$background"
-                                                    }
-                                                    alignItems="center"
-                                                    justifyContent="center"
-                                                >
-                                                    {task.completed && (
-                                                        <Text
-                                                            color="white"
-                                                            fontSize="$2"
-                                                            fontWeight="bold"
-                                                        >
-                                                            ✓
-                                                        </Text>
+                                                </XStack>
+                                                {task.subTasks &&
+                                                    task.subTasks.length >
+                                                        0 && (
+                                                        <YStack gap="$2">
+                                                            {task.subTasks.map(
+                                                                (subTask) => (
+                                                                    <XStack
+                                                                        key={
+                                                                            subTask.id
+                                                                        }
+                                                                        alignItems="center"
+                                                                        gap="$2"
+                                                                    >
+                                                                        <View
+                                                                            width={
+                                                                                3
+                                                                            }
+                                                                            height={
+                                                                                3
+                                                                            }
+                                                                            backgroundColor="$gray8"
+                                                                            borderRadius="$10"
+                                                                        />
+                                                                        <Text
+                                                                            color={
+                                                                                subTask.completed
+                                                                                    ? "$gray8"
+                                                                                    : "$gray11"
+                                                                            }
+                                                                            textDecorationLine={
+                                                                                subTask.completed
+                                                                                    ? "line-through"
+                                                                                    : "none"
+                                                                            }
+                                                                            fontSize="$3"
+                                                                        >
+                                                                            {
+                                                                                subTask.title
+                                                                            }
+                                                                        </Text>
+                                                                    </XStack>
+                                                                )
+                                                            )}
+                                                        </YStack>
                                                     )}
-                                                </View>
-                                            </TouchableOpacity>
+                                            </YStack>
                                         </XStack>
-                                        {task.subTasks?.map((subTask) => (
-                                            <XStack
-                                                key={subTask.id}
-                                                alignItems="center"
-                                                paddingLeft="$5"
-                                                paddingVertical="$1"
-                                            >
-                                                <Text
-                                                    color={
-                                                        subTask.completed
-                                                            ? "$gray8"
-                                                            : "$color"
-                                                    }
-                                                    textDecorationLine={
-                                                        subTask.completed
-                                                            ? "line-through"
-                                                            : "none"
-                                                    }
-                                                    fontSize="$3"
-                                                >
-                                                    - {subTask.title}
-                                                </Text>
-                                            </XStack>
-                                        ))}
+                                        {index < overdueTasks.length - 1 && (
+                                            <Separator
+                                                borderColor="$gray5"
+                                                marginVertical="$2"
+                                            />
+                                        )}
                                     </YStack>
                                 ))}
                             </YStack>
                         ) : (
-                            <XStack
-                                alignItems="center"
-                                gap="$2"
-                                paddingVertical="$3"
-                            >
-                                <Text fontSize="$4">🎉</Text>
-                                <Text color="$gray10" fontSize="$4">
-                                    No overdue tasks
-                                </Text>
-                            </XStack>
+                            renderEmptyState(
+                                "🎉",
+                                "No overdue tasks",
+                                "You're all caught up!",
+                                "$green2"
+                            )
                         )}
                     </YStack>
                 );
@@ -603,11 +712,11 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
             <XStack
                 justifyContent="space-between"
                 alignItems="center"
-                marginBottom="$3"
+                marginBottom="$4"
             >
-                <XStack alignItems="center" gap="$2">
-                    {icon && <Text>{icon}</Text>}
-                    <Text fontWeight="600" fontSize="$6" color="$color12">
+                <XStack alignItems="center" gap="$3">
+                    {icon && <Text fontSize="$5">{icon}</Text>}
+                    <Text fontWeight="700" fontSize="$5" color="$gray12">
                         {title}
                     </Text>
                 </XStack>
@@ -621,7 +730,17 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                 : onViewAllJournals
                         }
                     >
-                        <ChevronRight size="$1" color="$gray10" />
+                        <YStack
+                            bg="$gray4"
+                            padding="$2.5"
+                            borderRadius="$8"
+                            pressStyle={{
+                                backgroundColor: "$gray6",
+                                scale: 0.95,
+                            }}
+                        >
+                            <ChevronRight size="$1" color="$gray11" />
+                        </YStack>
                     </TouchableOpacity>
                 )}
             </XStack>

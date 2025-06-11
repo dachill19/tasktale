@@ -6,23 +6,19 @@ import { XStack, YStack } from "tamagui";
 const SkeletonCard = ({ children }: { children: React.ReactNode }) => (
     <YStack
         backgroundColor="$background"
-        borderRadius="$6"
-        borderWidth={1}
-        borderColor="$gray6"
+        borderRadius="$4"
+        borderWidth={2}
+        borderColor="$gray8"
         padding="$4"
         width="100%"
         marginBottom="$4"
-        shadowColor="$shadowColor"
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        shadowOffset={{ width: 0, height: 2 }}
-        elevation={3}
+        elevation={2}
     >
         {children}
     </YStack>
 );
 
-const SkeletonRow = ({
+const SkeletonCardHeader = ({
     iconSize = 20,
     titleWidth = 120,
     showChevron = false,
@@ -34,7 +30,7 @@ const SkeletonRow = ({
     <XStack
         justifyContent="space-between"
         alignItems="center"
-        marginBottom="$3"
+        marginBottom="$4"
     >
         <XStack alignItems="center" gap="$3">
             <Skeleton
@@ -45,274 +41,393 @@ const SkeletonRow = ({
             />
             <Skeleton
                 width={titleWidth}
-                height={24}
+                height={20}
                 radius={6}
                 colorMode="light"
             />
         </XStack>
         {showChevron && (
-            <Skeleton width={16} height={16} radius="round" colorMode="light" />
-        )}
-    </XStack>
-);
-
-const TaskSkeletonItem = ({
-    showCheckbox = true,
-}: {
-    showCheckbox?: boolean;
-}) => (
-    <XStack alignItems="center" gap="$3" paddingVertical="$2">
-        <Skeleton width={12} height={12} radius="round" colorMode="light" />
-        <YStack flex={1} gap="$1">
-            <Skeleton width="85%" height={16} radius={4} colorMode="light" />
-            <Skeleton width="45%" height={12} radius={4} colorMode="light" />
-        </YStack>
-        {showCheckbox && (
-            <Skeleton width={24} height={24} radius="round" colorMode="light" />
-        )}
-    </XStack>
-);
-
-const JournalSkeletonItem = () => (
-    <YStack paddingVertical="$3">
-        <XStack
-            justifyContent="space-between"
-            alignItems="center"
-            marginBottom="$2"
-        >
-            <XStack alignItems="center" gap="$2">
-                <Skeleton
-                    width={24}
-                    height={24}
-                    radius="round"
-                    colorMode="light"
-                />
-                <Skeleton
-                    width={100}
-                    height={14}
-                    radius={4}
-                    colorMode="light"
-                />
-            </XStack>
-            <XStack alignItems="center" gap="$1">
+            <YStack backgroundColor="$gray4" padding="$2.5" borderRadius="$8">
                 <Skeleton
                     width={16}
                     height={16}
                     radius="round"
                     colorMode="light"
                 />
-                <Skeleton width={40} height={12} radius={4} colorMode="light" />
-            </XStack>
-        </XStack>
-        <Skeleton width="100%" height={48} radius={6} colorMode="light" />
+            </YStack>
+        )}
+    </XStack>
+);
+
+const PriorityBadgeSkeleton = () => (
+    <YStack
+        backgroundColor="$gray3"
+        borderRadius="$8"
+        padding="$2"
+        alignItems="center"
+        justifyContent="center"
+        width={16}
+        height={16}
+    >
+        <Skeleton width={12} height={12} radius="round" colorMode="light" />
     </YStack>
 );
 
-const MoodSkeletonItem = ({ size = 32 }: { size?: number }) => (
+const TaskSkeletonItem = ({
+    showSubTasks = false,
+}: {
+    showSubTasks?: boolean;
+}) => (
+    <YStack>
+        <XStack alignItems="flex-start" gap="$2" paddingVertical="$2">
+            <PriorityBadgeSkeleton />
+            <YStack flex={1} gap="$1.5">
+                <Skeleton
+                    width="85%"
+                    height={16}
+                    radius={4}
+                    colorMode="light"
+                />
+                <Skeleton
+                    width="45%"
+                    height={12}
+                    radius={4}
+                    colorMode="light"
+                />
+                {showSubTasks && (
+                    <YStack gap="$2" marginTop="$1">
+                        <XStack alignItems="center" gap="$2">
+                            <Skeleton
+                                width={3}
+                                height={3}
+                                radius="round"
+                                colorMode="light"
+                            />
+                            <Skeleton
+                                width="60%"
+                                height={12}
+                                radius={4}
+                                colorMode="light"
+                            />
+                        </XStack>
+                        <XStack alignItems="center" gap="$2">
+                            <Skeleton
+                                width={3}
+                                height={3}
+                                radius="round"
+                                colorMode="light"
+                            />
+                            <Skeleton
+                                width="50%"
+                                height={12}
+                                radius={4}
+                                colorMode="light"
+                            />
+                        </XStack>
+                    </YStack>
+                )}
+            </YStack>
+        </XStack>
+    </YStack>
+);
+
+const JournalSkeletonItem = () => (
+    <YStack gap="$2" paddingVertical="$2">
+        <XStack justifyContent="space-between" alignItems="flex-start">
+            <XStack gap="$2" alignItems="center" flex={1}>
+                <Skeleton
+                    width={24}
+                    height={24}
+                    radius="round"
+                    colorMode="light"
+                />
+                <YStack flex={1}>
+                    <Skeleton
+                        width={100}
+                        height={16}
+                        radius={4}
+                        colorMode="light"
+                    />
+                    <Skeleton
+                        width={80}
+                        height={12}
+                        radius={4}
+                        colorMode="light"
+                    />
+                </YStack>
+            </XStack>
+            <XStack
+                backgroundColor="$gray3"
+                paddingHorizontal="$2.5"
+                paddingVertical="$1.5"
+                borderRadius="$8"
+                alignItems="center"
+                gap="$1.5"
+            >
+                <Skeleton
+                    width={12}
+                    height={12}
+                    radius="round"
+                    colorMode="light"
+                />
+                <Skeleton width={30} height={8} radius={4} colorMode="light" />
+            </XStack>
+        </XStack>
+        <Skeleton width="100%" height={24} radius={4} colorMode="light" />
+    </YStack>
+);
+
+const MoodSkeletonItem = ({
+    size = 48,
+    isHighlight = false,
+}: {
+    size?: number;
+    isHighlight?: boolean;
+}) => (
     <YStack alignItems="center" gap="$2">
-        <Skeleton width={size} height={size} radius="round" colorMode="light" />
-        <Skeleton width={24} height={16} radius={4} colorMode="light" />
+        <YStack
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor={isHighlight ? "$gray4" : "$gray3"}
+            borderRadius="$8"
+            width={size}
+            height={size}
+        >
+            <Skeleton
+                width={size * 0.5}
+                height={size * 0.5}
+                radius="round"
+                colorMode="light"
+            />
+        </YStack>
+        <YStack alignItems="center" gap="$0.5">
+            <Skeleton width={16} height={16} radius={4} colorMode="light" />
+            <Skeleton width={24} height={8} radius={4} colorMode="light" />
+        </YStack>
+    </YStack>
+);
+
+const SeparatorSkeleton = () => (
+    <YStack height={2} backgroundColor="$gray5" marginVertical="$2" />
+);
+
+const EmptyStateSkeleton = ({ bgColor = "$gray3" }: { bgColor?: string }) => (
+    <YStack
+        alignItems="center"
+        justifyContent="center"
+        paddingVertical="$6"
+        borderRadius="$4"
+        backgroundColor={bgColor}
+        gap="$2"
+    >
+        <Skeleton width={28} height={28} radius="round" colorMode="light" />
+        <YStack alignItems="center" gap="$1">
+            <Skeleton width={120} height={16} radius={4} colorMode="light" />
+            <Skeleton width={140} height={12} radius={4} colorMode="light" />
+        </YStack>
     </YStack>
 );
 
 export function DashboardSkeleton() {
     return (
-        <YStack
-            flex={1}
-            backgroundColor="$background"
-            paddingHorizontal="$4"
-            alignItems="center"
-        >
+        <YStack flex={1} backgroundColor="$background" paddingHorizontal="$4">
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 100 }}
             >
                 <YStack>
-                    {/* Enhanced Header Skeleton */}
-                    <YStack alignItems="center" marginVertical="$6" gap="$3">
+                    {/* Header Skeleton */}
+                    <YStack alignItems="center" marginVertical="$4">
                         <Skeleton
                             width={280}
-                            height={36}
+                            height={32}
                             radius={8}
                             colorMode="light"
                         />
                         <Skeleton
                             width={200}
-                            height={18}
+                            height={16}
                             radius={6}
                             colorMode="light"
                         />
                     </YStack>
 
-                    {/* Enhanced Task Progress Card */}
+                    {/* Task Progress Card */}
                     <SkeletonCard>
-                        <SkeletonRow iconSize={24} titleWidth={140} />
-                        <YStack gap="$3">
-                            <Skeleton
-                                width="100%"
-                                height={12}
-                                radius={6}
-                                colorMode="light"
-                            />
+                        <SkeletonCardHeader iconSize={20} titleWidth={120} />
+                        <YStack gap="$4">
+                            <YStack gap="$3">
+                                <Skeleton
+                                    width="100%"
+                                    height={8}
+                                    radius={10}
+                                    colorMode="light"
+                                />
+                                <XStack
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
+                                    <Skeleton
+                                        width={140}
+                                        height={12}
+                                        radius={4}
+                                        colorMode="light"
+                                    />
+                                    <XStack
+                                        backgroundColor="$gray3"
+                                        paddingHorizontal="$3"
+                                        paddingVertical="$1.5"
+                                        borderRadius="$8"
+                                    >
+                                        <Skeleton
+                                            width={40}
+                                            height={12}
+                                            radius={4}
+                                            colorMode="light"
+                                        />
+                                    </XStack>
+                                </XStack>
+                            </YStack>
+                        </YStack>
+                    </SkeletonCard>
+
+                    {/* Overdue Tasks Card */}
+                    <SkeletonCard>
+                        <SkeletonCardHeader
+                            iconSize={20}
+                            titleWidth={140}
+                            showChevron
+                        />
+                        <YStack gap="$2">
                             <XStack
-                                justifyContent="space-between"
-                                alignItems="center"
+                                backgroundColor="$gray3"
+                                paddingHorizontal="$3"
+                                paddingVertical="$1.5"
+                                borderRadius="$8"
+                                alignSelf="flex-start"
                             >
                                 <Skeleton
-                                    width={140}
-                                    height={16}
+                                    width={80}
+                                    height={12}
                                     radius={4}
                                     colorMode="light"
                                 />
+                            </XStack>
+                            <YStack>
+                                <TaskSkeletonItem />
+                                <SeparatorSkeleton />
+                                <TaskSkeletonItem showSubTasks />
+                            </YStack>
+                        </YStack>
+                    </SkeletonCard>
+
+                    {/* Today's Tasks Card */}
+                    <SkeletonCard>
+                        <SkeletonCardHeader
+                            iconSize={20}
+                            titleWidth={140}
+                            showChevron
+                        />
+                        <YStack gap="$2">
+                            <XStack
+                                backgroundColor="$gray3"
+                                paddingHorizontal="$3"
+                                paddingVertical="$1.5"
+                                borderRadius="$8"
+                                alignSelf="flex-start"
+                            >
                                 <Skeleton
                                     width={60}
+                                    height={12}
+                                    radius={4}
+                                    colorMode="light"
+                                />
+                            </XStack>
+                            <YStack>
+                                <TaskSkeletonItem />
+                                <SeparatorSkeleton />
+                                <TaskSkeletonItem />
+                                <SeparatorSkeleton />
+                                <TaskSkeletonItem showSubTasks />
+                            </YStack>
+                        </YStack>
+                    </SkeletonCard>
+
+                    {/* Weekly Mood Card */}
+                    <SkeletonCard>
+                        <SkeletonCardHeader iconSize={20} titleWidth={120} />
+                        <YStack gap="$2">
+                            <XStack
+                                justifyContent="center"
+                                alignItems="flex-end"
+                                gap="$2"
+                                paddingVertical="$2"
+                                flexWrap="wrap"
+                            >
+                                <MoodSkeletonItem size={56} isHighlight />
+                                <MoodSkeletonItem size={48} />
+                                <MoodSkeletonItem size={48} />
+                                <MoodSkeletonItem size={48} />
+                                <MoodSkeletonItem size={48} />
+                            </XStack>
+                            <XStack
+                                backgroundColor="$gray3"
+                                padding="$3"
+                                borderRadius="$4"
+                                justifyContent="center"
+                            >
+                                <Skeleton
+                                    width={180}
+                                    height={12}
+                                    radius={4}
+                                    colorMode="light"
+                                />
+                            </XStack>
+                        </YStack>
+                    </SkeletonCard>
+
+                    {/* Recent Journals Card */}
+                    <SkeletonCard>
+                        <SkeletonCardHeader
+                            iconSize={20}
+                            titleWidth={140}
+                            showChevron
+                        />
+                        <YStack gap="$2">
+                            <JournalSkeletonItem />
+                            <SeparatorSkeleton />
+                            <JournalSkeletonItem />
+                            <SeparatorSkeleton />
+                            <JournalSkeletonItem />
+                        </YStack>
+                    </SkeletonCard>
+
+                    {/* Journal Reminder Card */}
+                    <YStack
+                        backgroundColor="$gray2"
+                        borderRadius="$4"
+                        borderWidth={1}
+                        borderColor="$gray8"
+                        padding="$4"
+                        marginBottom="$4"
+                    >
+                        <YStack gap="$2">
+                            <XStack alignItems="center" gap="$2">
+                                <Skeleton
+                                    width={16}
+                                    height={16}
+                                    radius="round"
+                                    colorMode="light"
+                                />
+                                <Skeleton
+                                    width={200}
                                     height={20}
                                     radius={6}
                                     colorMode="light"
                                 />
                             </XStack>
-                        </YStack>
-                    </SkeletonCard>
-
-                    {/* Enhanced Overdue Tasks Card */}
-                    <SkeletonCard>
-                        <SkeletonRow
-                            iconSize={24}
-                            titleWidth={140}
-                            showChevron
-                        />
-                        <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                            marginBottom="$3"
-                        >
-                            <Skeleton
-                                width={120}
-                                height={14}
-                                radius={4}
-                                colorMode="light"
-                            />
-                        </XStack>
-                        <YStack gap="$2">
-                            <TaskSkeletonItem showCheckbox={false} />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$1"
-                            />
-                            <TaskSkeletonItem showCheckbox={false} />
-                        </YStack>
-                    </SkeletonCard>
-
-                    {/* Enhanced Today's Tasks Card */}
-                    <SkeletonCard>
-                        <SkeletonRow
-                            iconSize={24}
-                            titleWidth={140}
-                            showChevron
-                        />
-                        <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                            marginBottom="$3"
-                        >
-                            <Skeleton
-                                width={80}
-                                height={14}
-                                radius={4}
-                                colorMode="light"
-                            />
-                        </XStack>
-                        <YStack gap="$2">
-                            <TaskSkeletonItem />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$1"
-                            />
-                            <TaskSkeletonItem />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$1"
-                            />
-                            <TaskSkeletonItem />
-                        </YStack>
-                    </SkeletonCard>
-
-                    {/* Enhanced Weekly Mood Card */}
-                    <SkeletonCard>
-                        <SkeletonRow iconSize={24} titleWidth={140} />
-                        <YStack gap="$3">
-                            <XStack
-                                justifyContent="center"
-                                alignItems="flex-end"
-                                gap="$4"
-                                paddingVertical="$2"
-                            >
-                                <MoodSkeletonItem size={40} />
-                                <MoodSkeletonItem size={36} />
-                                <MoodSkeletonItem size={32} />
-                                <MoodSkeletonItem size={28} />
-                            </XStack>
-                            <YStack alignItems="center">
-                                <Skeleton
-                                    width={180}
-                                    height={14}
-                                    radius={4}
-                                    colorMode="light"
-                                />
-                            </YStack>
-                        </YStack>
-                    </SkeletonCard>
-
-                    {/* Enhanced Recent Journals Card */}
-                    <SkeletonCard>
-                        <SkeletonRow
-                            iconSize={24}
-                            titleWidth={140}
-                            showChevron
-                        />
-                        <YStack>
-                            <JournalSkeletonItem />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$2"
-                            />
-                            <JournalSkeletonItem />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$2"
-                            />
-                            <JournalSkeletonItem />
-                        </YStack>
-                    </SkeletonCard>
-
-                    {/* Enhanced Journal Reminder Card */}
-                    <YStack
-                        backgroundColor="$blue2"
-                        borderRadius="$6"
-                        borderWidth={1}
-                        borderColor="$blue6"
-                        padding="$4"
-                        marginBottom="$4"
-                        shadowColor="$blue8"
-                        shadowOpacity={0.1}
-                        shadowRadius={6}
-                        shadowOffset={{ width: 0, height: 2 }}
-                        elevation={2}
-                    >
-                        <YStack gap="$2">
                             <Skeleton
                                 width="90%"
-                                height={22}
-                                radius={6}
-                                colorMode="light"
-                            />
-                            <Skeleton
-                                width="75%"
                                 height={16}
                                 radius={4}
                                 colorMode="light"
@@ -320,33 +435,33 @@ export function DashboardSkeleton() {
                         </YStack>
                     </YStack>
 
-                    {/* Enhanced Upcoming Tasks Card */}
+                    {/* Upcoming Tasks Card */}
                     <SkeletonCard>
-                        <SkeletonRow
-                            iconSize={24}
+                        <SkeletonCardHeader
+                            iconSize={20}
                             titleWidth={140}
                             showChevron
                         />
-                        <XStack
-                            justifyContent="space-between"
-                            alignItems="center"
-                            marginBottom="$3"
-                        >
-                            <Skeleton
-                                width={100}
-                                height={14}
-                                radius={4}
-                                colorMode="light"
-                            />
-                        </XStack>
                         <YStack gap="$2">
-                            <TaskSkeletonItem />
-                            <YStack
-                                height={1}
-                                backgroundColor="$gray4"
-                                marginVertical="$1"
-                            />
-                            <TaskSkeletonItem />
+                            <XStack
+                                backgroundColor="$gray3"
+                                paddingHorizontal="$3"
+                                paddingVertical="$1.5"
+                                borderRadius="$8"
+                                alignSelf="flex-start"
+                            >
+                                <Skeleton
+                                    width={70}
+                                    height={12}
+                                    radius={4}
+                                    colorMode="light"
+                                />
+                            </XStack>
+                            <YStack>
+                                <TaskSkeletonItem />
+                                <SeparatorSkeleton />
+                                <TaskSkeletonItem />
+                            </YStack>
                         </YStack>
                     </SkeletonCard>
                 </YStack>
@@ -354,5 +469,3 @@ export function DashboardSkeleton() {
         </YStack>
     );
 }
-
-//testing

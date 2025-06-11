@@ -27,7 +27,6 @@ const Dashboard = () => {
         loading,
         error,
         fetchData,
-        toggleTask,
         isTaskOverdue,
         isTaskUpcoming,
     } = useDashboardStore();
@@ -132,7 +131,6 @@ const Dashboard = () => {
                         icon={<Calendar size="$1" color="$green10" />}
                         type="tasks"
                         tasks={todayTasks}
-                        onToggleTask={toggleTask}
                         onViewAllTasks={() => router.push("/tasks")}
                     />
 
@@ -182,7 +180,6 @@ const Dashboard = () => {
                             icon={<Clipboard size="$1" color="$indigo10" />}
                             type="tasks"
                             tasks={upcomingTasks.slice(0, 3)}
-                            onToggleTask={toggleTask}
                             onViewAllTasks={() => router.push("/tasks")}
                         />
                     )}

@@ -74,7 +74,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             case "High":
                 return "$red4";
             case "Medium":
-                return "$yellow4";
+                return "$orange4";
             case "Low":
                 return "$green4";
             default:
@@ -87,7 +87,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             case "High":
                 return "$red10";
             case "Medium":
-                return "#eab308";
+                return "$orange10";
             case "Low":
                 return "$green10";
             default:
@@ -100,7 +100,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             case "High":
                 return "$red4";
             case "Medium":
-                return "$yellow4";
+                return "$orange4";
             case "Low":
                 return "$green4";
             default:
@@ -113,7 +113,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             case "High":
                 return "$red10";
             case "Medium":
-                return "$yellow10";
+                return "$orange10";
             case "Low":
                 return "$green10";
             default:
