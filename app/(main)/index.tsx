@@ -1,6 +1,15 @@
 import DashboardCard from "@/components/DashboardCard";
 import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { useDashboardStore } from "@/lib/stores/dashboardStore";
+import {
+    AlertTriangle,
+    BarChart3,
+    BookOpen,
+    Calendar,
+    Clipboard,
+    Edit3,
+    TrendingUp,
+} from "@tamagui/lucide-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { DateTime } from "luxon";
 import { useCallback } from "react";
@@ -101,7 +110,7 @@ const Dashboard = () => {
 
                     <DashboardCard
                         title="Task Progress"
-                        icon="📈"
+                        icon={<TrendingUp size="$1" color="$blue10" />}
                         type="progress"
                         progress={taskProgress}
                         completedTasks={completedTasksCount}
@@ -111,8 +120,8 @@ const Dashboard = () => {
                     {overdueTasks.length > 0 && (
                         <DashboardCard
                             title="Overdue Tasks"
-                            icon="⚠️"
-                            type="overdue-display"
+                            icon={<AlertTriangle size="$1" color="$red10" />}
+                            type="overdue-tasks"
                             tasks={overdueTasks}
                             onViewAllTasks={() => router.push("/tasks")}
                         />
@@ -120,7 +129,7 @@ const Dashboard = () => {
 
                     <DashboardCard
                         title="Today's Tasks"
-                        icon="📅"
+                        icon={<Calendar size="$1" color="$green10" />}
                         type="tasks"
                         tasks={todayTasks}
                         onToggleTask={toggleTask}
@@ -129,14 +138,14 @@ const Dashboard = () => {
 
                     <DashboardCard
                         title="Weekly Mood"
-                        icon="📊"
+                        icon={<BarChart3 size="$1" color="$purple10" />}
                         type="weekly-mood"
                         journals={journalEntries}
                     />
 
                     <DashboardCard
                         title="Recent Journals"
-                        icon="📔"
+                        icon={<BookOpen size="$1" color="$orange10" />}
                         type="recent-journals"
                         journals={journalEntries}
                         onViewAllJournals={() => router.push("/journals")}
@@ -157,7 +166,8 @@ const Dashboard = () => {
                                 color="$blue10"
                                 marginBottom="$2"
                             >
-                                📝 Don't forget to journal today!
+                                <Edit3 size="$1" color="$blue10" /> Don't forget
+                                to journal today!
                             </Text>
                             <Text color="$blue11" fontSize="$4">
                                 Take a moment to reflect on your day and track
@@ -169,7 +179,7 @@ const Dashboard = () => {
                     {upcomingTasks.length > 0 && upcomingTasks.length <= 5 && (
                         <DashboardCard
                             title="Upcoming Tasks"
-                            icon="📋"
+                            icon={<Clipboard size="$1" color="$indigo10" />}
                             type="tasks"
                             tasks={upcomingTasks.slice(0, 3)}
                             onToggleTask={toggleTask}
