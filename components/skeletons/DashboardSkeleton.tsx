@@ -211,23 +211,6 @@ const SeparatorSkeleton = () => (
     <YStack height={2} backgroundColor="$gray5" marginVertical="$2" />
 );
 
-const EmptyStateSkeleton = ({ bgColor = "$gray3" }: { bgColor?: string }) => (
-    <YStack
-        alignItems="center"
-        justifyContent="center"
-        paddingVertical="$6"
-        borderRadius="$4"
-        backgroundColor={bgColor}
-        gap="$2"
-    >
-        <Skeleton width={28} height={28} radius="round" colorMode="light" />
-        <YStack alignItems="center" gap="$1">
-            <Skeleton width={120} height={16} radius={4} colorMode="light" />
-            <Skeleton width={140} height={12} radius={4} colorMode="light" />
-        </YStack>
-    </YStack>
-);
-
 export function DashboardSkeleton() {
     return (
         <YStack flex={1} backgroundColor="$background" paddingHorizontal="$4">
