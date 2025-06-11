@@ -24,7 +24,13 @@ interface JournalItem {
 interface DashboardCardProps {
     title: string;
     icon: string;
-    type: "progress" | "tasks" | "recent-journals" | "weekly-mood" | "overdue-tasks" | "overdue-display";
+    type:
+        | "progress"
+        | "tasks"
+        | "recent-journals"
+        | "weekly-mood"
+        | "overdue-tasks"
+        | "overdue-display";
     progress?: number;
     completedTasks?: number;
     totalTasks?: number;
@@ -62,7 +68,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
     const isTaskOverdue = (dueDate: string): boolean => {
         try {
-            const taskDate = DateTime.fromISO(dueDate, { zone: "Asia/Jakarta" });
+            const taskDate = DateTime.fromISO(dueDate, {
+                zone: "Asia/Jakarta",
+            });
             if (!taskDate.isValid) return false;
             return taskDate < today.startOf("day");
         } catch {
@@ -102,7 +110,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         const oneWeekAgo = today.minus({ days: 7 });
 
         const weeklyJournals = journals.filter((journal) => {
-            const journalDate = DateTime.fromISO(journal.date, { zone: "Asia/Jakarta" });
+            const journalDate = DateTime.fromISO(journal.date, {
+                zone: "Asia/Jakarta",
+            });
             return journalDate >= oneWeekAgo && journalDate <= today;
         });
 
@@ -342,7 +352,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             </Text>
                                         </YStack>
                                         {index <
-                                            Math.min(journals.length, 3) - 1 && (
+                                            Math.min(journals.length, 3) -
+                                                1 && (
                                             <Separator borderColor="$borderColor" />
                                         )}
                                     </View>
@@ -430,7 +441,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
             case "overdue-tasks":
                 const overdueTasks = tasks.filter(
-                    (task) => !task.completed && task.dueDate && isTaskOverdue(task.dueDate)
+                    (task) =>
+                        !task.completed &&
+                        task.dueDate &&
+                        isTaskOverdue(task.dueDate)
                 );
 
                 return (
@@ -452,7 +466,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             justifyContent="space-between"
                                             paddingVertical="$2"
                                             borderBottomWidth={
-                                                index < overdueTasks.length - 1 ? 1 : 0
+                                                index < overdueTasks.length - 1
+                                                    ? 1
+                                                    : 0
                                             }
                                             borderBottomColor="$borderColor"
                                         >
@@ -480,7 +496,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                                         color="$red10"
                                                         fontSize="$3"
                                                     >
-                                                        Due: {formatDate(task.dueDate!)}
+                                                        Due:{" "}
+                                                        {formatDate(
+                                                            task.dueDate!
+                                                        )}
                                                     </Text>
                                                 </YStack>
                                             </XStack>
@@ -563,7 +582,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 
             case "overdue-display":
                 const overdueDisplayTasks = tasks.filter(
-                    (task) => !task.completed && task.dueDate && isTaskOverdue(task.dueDate)
+                    (task) =>
+                        !task.completed &&
+                        task.dueDate &&
+                        isTaskOverdue(task.dueDate)
                 );
 
                 return (
@@ -584,7 +606,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                             alignItems="center"
                                             paddingVertical="$2"
                                             borderBottomWidth={
-                                                index < overdueDisplayTasks.length - 1 ? 1 : 0
+                                                index <
+                                                overdueDisplayTasks.length - 1
+                                                    ? 1
+                                                    : 0
                                             }
                                             borderBottomColor="$borderColor"
                                         >
@@ -612,7 +637,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                                                         color="$red10"
                                                         fontSize="$3"
                                                     >
-                                                        Due: {formatDate(task.dueDate!)}
+                                                        Due:{" "}
+                                                        {formatDate(
+                                                            task.dueDate!
+                                                        )}
                                                     </Text>
                                                 </YStack>
                                             </XStack>
@@ -686,19 +714,20 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 marginBottom="$3"
             >
                 <XStack alignItems="center" gap="$2">
-                    {icon && (
-                        <Text fontSize="$5">
-                            {icon}
-                        </Text>
-                    )}
+                    {icon && <Text fontSize="$5">{icon}</Text>}
                     <Text fontWeight="600" fontSize="$6" color="$color12">
                         {title}
                     </Text>
                 </XStack>
-                {(type === "tasks" || type === "recent-journals" || type === "overdue-tasks" || type === "overdue-display") && (
+                {(type === "tasks" ||
+                    type === "recent-journals" ||
+                    type === "overdue-tasks" ||
+                    type === "overdue-display") && (
                     <TouchableOpacity
                         onPress={
-                            type === "tasks" || type === "overdue-tasks" || type === "overdue-display"
+                            type === "tasks" ||
+                            type === "overdue-tasks" ||
+                            type === "overdue-display"
                                 ? onViewAllTasks
                                 : onViewAllJournals
                         }
