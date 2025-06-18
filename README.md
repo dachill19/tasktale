@@ -59,14 +59,6 @@ Our app is built with love using these amazing technologies:
 | **Zustand**                 | State Management                  | Simple yet powerful state management 🐻   |
 | **Supabase**                | Backend & Database                | Real-time database with auth made easy 🚀 |
 
-### 🚀 **Development Platform Features**
-
--   **Expo Go** - Instant testing on physical devices without builds
--   **EAS Build** - Cloud-based build service for production-ready apps
--   **EAS Submit** - Automated app store submissions
--   **Over-the-Air Updates** - Push updates without app store approval
--   **Hot Reload** - See changes instantly during development
-
 ## 🎯 Roadmap
 
 Exciting things coming to TaskTale! 🚀
