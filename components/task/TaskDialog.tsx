@@ -72,10 +72,11 @@ export function TaskDialog({
         populateForm,
     } = useTaskDialogStore();
 
-    const { createTask, updateTask, currentUserId, taskToEdit } =
+    const { createTask, updateTask, currentUserId, taskToEdit, tasks } =
         useTaskStore();
 
-    // Populate form when dialog opens or taskToEdit changes
+    const shouldFixButtons = tasks.length >= 2;
+
     useEffect(() => {
         if (open) {
             if (taskToEdit) {
@@ -224,6 +225,38 @@ export function TaskDialog({
         [priority, setPriority]
     );
 
+    const getButtonText = () => {
+        if (isLoading) {
+            if (taskToEdit) {
+                return "Updating...";
+            } else {
+                return "Creating...";
+            }
+        } else {
+            if (taskToEdit) {
+                return "Update";
+            } else {
+                return "Create";
+            }
+        }
+    };
+
+    const getDialogTitle = () => {
+        if (taskToEdit) {
+            return "Edit Task";
+        } else {
+            return "Add Task";
+        }
+    };
+
+    const getDialogDescription = () => {
+        if (taskToEdit) {
+            return "Update your task details below.";
+        } else {
+            return "Create a new task with optional sub-task and deadline.";
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
@@ -257,12 +290,10 @@ export function TaskDialog({
                         fontWeight="bold"
                         color="$green10"
                     >
-                        {taskToEdit ? "Edit Task" : "Add Task"}
+                        {getDialogTitle()}
                     </Dialog.Title>
                     <Dialog.Description>
-                        {taskToEdit
-                            ? "Update your task details below."
-                            : "Create a new task with optional sub-task and deadline."}
+                        {getDialogDescription()}
                     </Dialog.Description>
 
                     <YStack gap="$2">
@@ -389,7 +420,23 @@ export function TaskDialog({
                         )}
                     </YStack>
 
-                    <XStack justifyContent="flex-end" gap="$2">
+                    {/* Add padding bottom when buttons are fixed */}
+                    {shouldFixButtons && <YStack height="$6" />}
+
+                    <XStack 
+                        justifyContent="flex-end" 
+                        gap="$2"
+                        {...(shouldFixButtons && {
+                            position: "absolute",
+                            bottom: "$4",
+                            right: "$4",
+                            left: "$4",
+                            backgroundColor: "white",
+                            paddingTop: "$2",
+                            borderTopWidth: 1,
+                            borderTopColor: "$gray6"
+                        })}
+                    >
                         <Dialog.Close asChild>
                             <Button
                                 onPress={handleCancel}
@@ -424,13 +471,7 @@ export function TaskDialog({
                                     : 1
                             }
                         >
-                            {isLoading
-                                ? taskToEdit
-                                    ? "Updating..."
-                                    : "Creating..."
-                                : taskToEdit
-                                ? "Update"
-                                : "Create"}
+                            {getButtonText()}
                         </Button>
                     </XStack>
                 </Dialog.Content>
