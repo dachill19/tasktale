@@ -11,6 +11,7 @@ export interface Task {
     completed: boolean;
     deadline?: string | null;
     created_at?: string;
+    doneAt?: string | null;
 }
 
 export interface SubTask {
@@ -404,7 +405,7 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
             : task.created_at
             ? formatDate(task.created_at)
             : "No date",
-        originalDeadline: task.deadline,
+        originalDeadline: task.deadline ?? undefined, // Convert null to undefined
         completedCount: totalSubTasks > 0 ? completedSubTasks : undefined,
         totalCount: totalSubTasks > 0 ? totalSubTasks : undefined,
         subTasks: task.sub_tasks?.map((st) => ({
@@ -414,5 +415,6 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
         })) || [],
         completed: task.completed,
         originalPriority: task.priority,
+        doneAt: task.doneAt,
     };
 };

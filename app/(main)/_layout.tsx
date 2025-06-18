@@ -1,5 +1,6 @@
 import { TabBar } from "@/components/TabBar";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useUserInfo } from "@/lib/stores/profileStore"; // Added for profile info
 import { Bell, LogOut, Plus, User } from "@tamagui/lucide-icons";
 import { router, Tabs } from "expo-router";
 import React, { useState } from "react";
@@ -22,12 +23,13 @@ function Header() {
     const { user, signOut } = useAuthStore();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    // Get user info from auth store
-    const userName =
-        user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
-    const userEmail = user?.email || "";
-    const userAvatar =
-        user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+    // Get user info using the helper hook
+    const { userName, userEmail, userAvatar } = useUserInfo(user);
+
+    const handleProfilePress = () => {
+        setShowUserMenu(false);
+        router.push("/profile");
+    };
 
     const handleLogout = () => {
         Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -152,16 +154,17 @@ function Header() {
 
                                     <Separator />
 
-                                    {/* Profile Button */}
+                                    {/* Profile Button - Now navigates to profile page */}
                                     <Button
                                         size="$3"
                                         backgroundColor="transparent"
                                         color="$color11"
                                         justifyContent="flex-start"
                                         icon={<User size={16} />}
-                                        onPress={() => {
-                                            setShowUserMenu(false);
-                                            console.log("Profile clicked!");
+                                        onPress={handleProfilePress}
+                                        pressStyle={{
+                                            backgroundColor: "$color3",
+                                            scale: 0.98,
                                         }}
                                     >
                                         Profile
@@ -177,6 +180,10 @@ function Header() {
                                         justifyContent="flex-start"
                                         icon={<LogOut size={16} />}
                                         onPress={handleLogout}
+                                        pressStyle={{
+                                            backgroundColor: "$red3",
+                                            scale: 0.98,
+                                        }}
                                     >
                                         Logout
                                     </Button>

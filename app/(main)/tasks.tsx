@@ -1,6 +1,6 @@
 // app/(main)/tasks.tsx
 import FilterToggleGroup from "@/components/FilterToggleGroup";
-import { TasksSkeleton } from "@/components/skeletons/TasksSkeleton"; // Tambahkan impor
+import { TasksSkeleton } from "@/components/skeletons/TasksSkeleton";
 import TaskCard from "@/components/task/TaskCard";
 import { TaskDialog } from "@/components/task/TaskDialog";
 import { useTaskStore } from "@/lib/stores/taskStore";
@@ -63,6 +63,11 @@ const Tasks = () => {
                           .toLocal()
                           .toJSDate()
                     : null;
+                const parsedDoneAt = task.doneAt
+                    ? DateTime.fromISO(task.doneAt, { zone: "utc" })
+                          .toLocal()
+                          .toJSDate()
+                    : null;
                 setTaskToEdit({
                     id: task.id,
                     title: task.title,
@@ -75,6 +80,9 @@ const Tasks = () => {
                     deadline: parsedDeadline
                         ? parsedDeadline.toISOString()
                         : null,
+                    doneAt: parsedDoneAt
+                        ? parsedDoneAt.toISOString()
+                        : null, // Added doneAt
                     sub_tasks:
                         task.subTasks?.map((st: any) => ({
                             id: st.id,
@@ -135,7 +143,7 @@ const Tasks = () => {
     ];
 
     if (loading) {
-        return <TasksSkeleton />; // Ganti dengan TasksSkeleton
+        return <TasksSkeleton />;
     }
 
     return (

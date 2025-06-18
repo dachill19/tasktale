@@ -12,10 +12,26 @@ import {
     updateTask,
     updateTaskStatus,
 } from "@/lib/task";
+import { DateTime } from "luxon";
 import { create } from "zustand";
 
+interface TransformedTask {
+    id: string;
+    title: string;
+    description?: string;
+    priority: "High" | "Medium" | "Low";
+    deadline: string;
+    originalDeadline?: string;
+    completedCount?: number;
+    totalCount?: number;
+    subTasks: Array<{ id: string; title: string; completed: boolean }>;
+    completed: boolean;
+    originalPriority: "high" | "medium" | "low";
+    doneAt?: string | null;
+}
+
 interface TaskState {
-    tasks: any[];
+    tasks: TransformedTask[];
     filter: TaskFilter;
     loading: boolean;
     error: string | null;
@@ -93,9 +109,24 @@ export const useTaskStore = create<TaskState>((set, get) => ({
                 tasks: state.tasks.map((task) =>
                     task.id === taskId
                         ? transformTaskForCard({
-                              ...task,
-                              ...taskData,
                               id: taskId,
+                              title: taskData.title,
+                              description: taskData.description,
+                              priority: taskData.priority,
+                              deadline: taskData.deadline
+                                  ? DateTime.fromJSDate(taskData.deadline)
+                                        .setZone("Asia/Jakarta")
+                                        .toUTC()
+                                        .toISO()
+                                  : null,
+                              sub_tasks: taskData.subTasks.map((st) => ({
+                                  id: "", // Placeholder, not used
+                                  task_id: taskId,
+                                  title: st.title,
+                                  completed: false,
+                              })),
+                              completed: task.completed,
+                              doneAt: task.doneAt,
                           })
                         : task
                 ),
@@ -129,6 +160,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
                     return {
                         ...task,
                         completed,
+                        doneAt: completed ? new Date().toISOString() : null,
                         subTasks: updatedSubTasks,
                         completedCount:
                             updatedSubTasks?.length > 0
