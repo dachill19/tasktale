@@ -1,14 +1,11 @@
-// lib/stores/profileStore.ts
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { create } from "zustand";
 
 interface ProfileState {
-    // State
     isLoading: boolean;
     error: string | null;
 
-    // Actions
     updateProfile: (data: {
         full_name?: string;
         phone?: string;
@@ -18,11 +15,9 @@ interface ProfileState {
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
-    // Initial state
     isLoading: false,
     error: null,
 
-    // Update profile
     updateProfile: async (data) => {
         set({ isLoading: true, error: null });
 
@@ -50,19 +45,21 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         }
     },
 
-    // Clear error
     clearError: () => {
         set({ error: null });
     },
 }));
 
-// Helper hooks
 export const useUserInfo = (user: User | null) => {
-    const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+    const userName =
+        user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
     const userEmail = user?.email || "";
-    const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+    const userAvatar =
+        user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
     const userPhone = user?.user_metadata?.phone || "";
-    const accountCreated = user?.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown";
+    const accountCreated = user?.created_at
+        ? new Date(user.created_at).toLocaleDateString()
+        : "Unknown";
 
     return {
         userName,

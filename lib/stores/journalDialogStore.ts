@@ -3,42 +3,34 @@ import { create } from "zustand";
 interface JournalImage {
     id?: string;
     url: string;
-    isLocal?: boolean; // For tracking if image is local (will be uploaded on save)
+    isLocal?: boolean;
 }
 
 interface JournalDialogState {
-    // Form data
     mood: string;
     content: string;
     created_at: Date;
     images: JournalImage[];
-    tags: string; // Simplified: just store as comma-separated string
+    tags: string;
 
-    // UI state
     isLoading: boolean;
     showDatePicker: boolean;
 
-    // ID generator for images only
     nextImageId: number;
 
-    // Form actions
     setMood: (mood: string) => void;
     setContent: (content: string) => void;
     setCreatedAt: (date: Date) => void;
     setTags: (tags: string) => void;
 
-    // Image actions
     addImage: (url: string, isLocal?: boolean) => JournalImage;
     removeImage: (id: string) => void;
 
-    // UI actions
     setLoading: (isLoading: boolean) => void;
     toggleDatePicker: (show?: boolean) => void;
 
-    // Form validation
     isFormValid: () => boolean;
 
-    // Form management
     resetForm: () => void;
     getFormData: () => {
         mood: string;
@@ -49,7 +41,6 @@ interface JournalDialogState {
 }
 
 export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
-    // Initial state
     mood: "",
     content: "",
     created_at: new Date(),
@@ -59,13 +50,11 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
     showDatePicker: false,
     nextImageId: 0,
 
-    // Form actions
     setMood: (mood) => set({ mood }),
     setContent: (content) => set({ content }),
     setCreatedAt: (created_at) => set({ created_at }),
     setTags: (tags) => set({ tags }),
 
-    // Image actions
     addImage: (url, isLocal = false) => {
         const state = get();
         const newImage: JournalImage = {
@@ -87,18 +76,15 @@ export const useJournalDialogStore = create<JournalDialogState>((set, get) => ({
             images: state.images.filter((img) => img.id !== id),
         })),
 
-    // UI actions
     setLoading: (isLoading) => set({ isLoading }),
     toggleDatePicker: (show) =>
         set((state) => ({ showDatePicker: show ?? !state.showDatePicker })),
 
-    // Form validation
     isFormValid: () => {
         const state = get();
         return !!(state.mood && state.content.trim());
     },
 
-    // Form management
     getFormData: () => {
         const state = get();
         return {

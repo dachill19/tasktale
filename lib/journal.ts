@@ -1,6 +1,5 @@
 import { supabase } from "./supabase";
 
-// ===== TYPES =====
 export interface Journal {
     id?: string;
     user_id?: string;
@@ -41,7 +40,6 @@ export type ServiceResponse<T> = {
     error?: string;
 };
 
-// ===== UTILITIES =====
 const handleError = (error: unknown, context: string): string => {
     console.error(`${context}:`, error);
     return error instanceof Error ? error.message : "Unknown error occurred";
@@ -59,17 +57,14 @@ const formatDate = (dateString: string): string => {
     }
 };
 
-// ===== STORAGE UTILITIES (FIXED VERSION) =====
 export const uploadImageToStorage = async (
     imageUri: string,
     userId: string
 ): Promise<ServiceResponse<string>> => {
     try {
-        // Generate unique filename
         const timestamp = Date.now();
         const filename = `${userId}/${timestamp}.jpg`;
 
-        // Method for React Native/Expo - Use FormData
         const formData = new FormData();
         formData.append("file", {
             uri: imageUri,
@@ -77,9 +72,8 @@ export const uploadImageToStorage = async (
             name: filename,
         } as any);
 
-        // Upload to Supabase storage
         const { data, error } = await supabase.storage
-            .from("journal-images") // Make sure this bucket exists in your Supabase project
+            .from("journal-images")
             .upload(filename, formData, {
                 contentType: "image/jpeg",
                 upsert: false,
@@ -89,7 +83,6 @@ export const uploadImageToStorage = async (
             return { success: false, error: error.message };
         }
 
-        // Get public URL
         const { data: publicUrlData } = supabase.storage
             .from("journal-images")
             .getPublicUrl(data.path);
@@ -109,18 +102,15 @@ export const deleteImageFromStorage = async (
     try {
         console.log("Attempting to delete image:", imageUrl);
 
-        // Supabase public URL format: https://[project-ref].supabase.co/storage/v1/object/public/[bucket-name]/[file-path]
         const url = new URL(imageUrl);
         const pathname = url.pathname;
 
-        // Find the bucket name in the path
         const publicIndex = pathname.indexOf("/public/");
         if (publicIndex === -1) {
             console.error("Invalid Supabase storage URL format:", imageUrl);
             return { success: false, error: "Invalid storage URL format" };
         }
 
-        // Extract everything after /public/bucket-name/
         const afterPublic = pathname.substring(publicIndex + "/public/".length);
         const pathParts = afterPublic.split("/");
 
@@ -132,7 +122,6 @@ export const deleteImageFromStorage = async (
             };
         }
 
-        // Skip bucket name (first part) and get the actual file path
         const filePath = pathParts.slice(1).join("/");
 
         console.log("Extracted file path:", filePath);
@@ -157,7 +146,6 @@ export const deleteImageFromStorage = async (
     }
 };
 
-// ===== CORE FUNCTIONS =====
 export const getCurrentUserId = async (): Promise<ServiceResponse<string>> => {
     try {
         const {
@@ -182,12 +170,10 @@ export const createJournal = async (
     userId: string
 ): Promise<ServiceResponse<JournalWithAssets>> => {
     try {
-        // Filter images that need to be uploaded (local images only)
         const localImages = journalData.images.filter(
             (image) => image.url.trim() && !image.url.startsWith("http")
         );
 
-        // Upload local images to storage
         const uploadedImages: string[] = [];
         const uploadErrors: string[] = [];
 
@@ -200,7 +186,6 @@ export const createJournal = async (
             }
         }
 
-        // Insert main journal
         const { data: journal, error: journalError } = await supabase
             .from("journals")
             .insert({
@@ -213,14 +198,12 @@ export const createJournal = async (
             .single();
 
         if (journalError) {
-            // Clean up uploaded images if journal creation fails
             for (const imageUrl of uploadedImages) {
                 await deleteImageFromStorage(imageUrl);
             }
             return { success: false, error: journalError.message };
         }
 
-        // Insert uploaded images to database
         let images: JournalImage[] = [];
         if (uploadedImages.length > 0) {
             const imageRecords = uploadedImages.map((url) => ({
@@ -234,7 +217,6 @@ export const createJournal = async (
                 .select();
 
             if (imagesError) {
-                // Clean up uploaded images if database insert fails
                 for (const imageUrl of uploadedImages) {
                     await deleteImageFromStorage(imageUrl);
                 }
@@ -246,7 +228,6 @@ export const createJournal = async (
             images = imagesData || [];
         }
 
-        // Insert tags if any
         const validTags = journalData.tags
             .filter((tag) => tag.name.trim())
             .map((tag) => ({
@@ -270,7 +251,6 @@ export const createJournal = async (
             tags = tagsData || [];
         }
 
-        // Return success with any upload errors as warnings
         const result = {
             success: true,
             data: {
@@ -336,7 +316,6 @@ export const getFilteredJournals = async (
             .eq("user_id", userId)
             .order("created_at", { ascending: false });
 
-        // Apply filters
         switch (filter) {
             case "today":
                 const today = new Date();
@@ -396,7 +375,6 @@ export const deleteJournal = async (
     journalId: string
 ): Promise<ServiceResponse<void>> => {
     try {
-        // First get all images associated with this journal
         const { data: journalImages, error: getImagesError } = await supabase
             .from("journal_images")
             .select("image_url")
@@ -409,14 +387,12 @@ export const deleteJournal = async (
             );
         }
 
-        // Delete images from storage
         if (journalImages && journalImages.length > 0) {
             for (const image of journalImages) {
                 await deleteImageFromStorage(image.image_url);
             }
         }
 
-        // Delete journal images from database
         const { error: imagesError } = await supabase
             .from("journal_images")
             .delete()
@@ -429,7 +405,6 @@ export const deleteJournal = async (
             );
         }
 
-        // Delete journal tags
         const { error: tagsError } = await supabase
             .from("journal_tags")
             .delete()
@@ -439,7 +414,6 @@ export const deleteJournal = async (
             console.warn("Warning deleting journal tags:", tagsError.message);
         }
 
-        // Finally delete the main journal
         const { error } = await supabase
             .from("journals")
             .delete()
@@ -455,7 +429,6 @@ export const deleteJournal = async (
     }
 };
 
-// ===== TRANSFORM UTILITIES =====
 export const transformJournalForCard = (journal: JournalWithAssets) => {
     return {
         id: journal.id!,
@@ -473,7 +446,6 @@ export const transformJournalForCard = (journal: JournalWithAssets) => {
     };
 };
 
-// ===== ANALYTICS =====
 export const getJournalStats = async (
     userId: string
 ): Promise<
@@ -502,13 +474,11 @@ export const getJournalStats = async (
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        // Count moods
         const moods: Record<string, number> = {};
         journals.forEach((journal) => {
             moods[journal.mood] = (moods[journal.mood] || 0) + 1;
         });
 
-        // Count unique tags
         const uniqueTags = new Set();
         journals.forEach((journal) => {
             journal.journal_tags?.forEach((tag: any) => {

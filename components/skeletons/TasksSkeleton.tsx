@@ -1,4 +1,3 @@
-// components/skeletons/TasksSkeleton.tsx
 import { Skeleton } from "moti/skeleton";
 import { ScrollView } from "react-native";
 import { XStack, YStack } from "tamagui";
@@ -6,9 +5,9 @@ import { XStack, YStack } from "tamagui";
 const SkeletonCard = ({ children }: { children: React.ReactNode }) => (
     <YStack
         backgroundColor="$background"
-        borderRadius="$6" // Mengikuti DashboardSkeleton
-        borderWidth={1} // Mengikuti DashboardSkeleton
-        borderColor="$gray6" // Mengikuti DashboardSkeleton
+        borderRadius="$6"
+        borderWidth={1}
+        borderColor="$gray6"
         padding="$4"
         width="100%"
         marginBottom="$4"
@@ -16,7 +15,7 @@ const SkeletonCard = ({ children }: { children: React.ReactNode }) => (
         shadowOpacity={0.1}
         shadowRadius={8}
         shadowOffset={{ width: 0, height: 2 }}
-        elevation={3} // Mengikuti DashboardSkeleton
+        elevation={3}
     >
         {children}
     </YStack>

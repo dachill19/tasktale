@@ -120,7 +120,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
                                         .toISO()
                                   : null,
                               sub_tasks: taskData.subTasks.map((st) => ({
-                                  id: "", // Placeholder, not used
+                                  id: "",
                                   task_id: taskId,
                                   title: st.title,
                                   completed: false,

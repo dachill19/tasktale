@@ -1,4 +1,3 @@
-// app/(main)/tasks.tsx
 import FilterToggleGroup from "@/components/FilterToggleGroup";
 import { TasksSkeleton } from "@/components/skeletons/TasksSkeleton";
 import TaskCard from "@/components/task/TaskCard";
@@ -80,9 +79,7 @@ const Tasks = () => {
                     deadline: parsedDeadline
                         ? parsedDeadline.toISOString()
                         : null,
-                    doneAt: parsedDoneAt
-                        ? parsedDoneAt.toISOString()
-                        : null, // Added doneAt
+                    doneAt: parsedDoneAt ? parsedDoneAt.toISOString() : null,
                     sub_tasks:
                         task.subTasks?.map((st: any) => ({
                             id: st.id,

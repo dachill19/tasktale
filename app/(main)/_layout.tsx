@@ -1,7 +1,7 @@
 import { TabBar } from "@/components/TabBar";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { useUserInfo } from "@/lib/stores/profileStore"; // Added for profile info
-import { Bell, LogOut, Plus, User } from "@tamagui/lucide-icons";
+import { useUserInfo } from "@/lib/stores/profileStore";
+import { LogOut, Plus, User } from "@tamagui/lucide-icons";
 import { router, Tabs } from "expo-router";
 import React, { useState } from "react";
 import { Alert, TouchableOpacity } from "react-native";
@@ -23,7 +23,6 @@ function Header() {
     const { user, signOut } = useAuthStore();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    // Get user info using the helper hook
     const { userName, userEmail, userAvatar } = useUserInfo(user);
 
     const handleProfilePress = () => {
@@ -79,7 +78,7 @@ function Header() {
 
                     {/* Notifikasi dan Avatar */}
                     <XStack ai="center" gap="$3">
-                        {/* Notification Button */}
+                        {/* Notification Button
                         <Button
                             chromeless
                             circular
@@ -96,7 +95,7 @@ function Header() {
                                 bg="$color8"
                                 borderRadius={999}
                             />
-                        </Button>
+                        </Button> */}
 
                         {/* User Avatar with Popover Menu */}
                         <Popover
@@ -202,7 +201,7 @@ export default function Layout() {
 
     return (
         <View flex={1} position="relative">
-            {/* Sheet muncul dari bawah */}
+            {/* Bottom Sheet */}
             <Sheet
                 open={openSheet}
                 onOpenChange={setOpenSheet}

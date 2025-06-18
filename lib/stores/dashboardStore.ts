@@ -1,4 +1,3 @@
-// lib/stores/dashboardStore.ts
 import { DateTime } from "luxon";
 import { create } from "zustand";
 import { getCurrentUserProfile } from "../auth";
@@ -118,7 +117,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
             });
 
             try {
-                // Set greeting based on time
                 const hours = today.hour;
                 const greeting =
                     hours >= 4 && hours < 12
@@ -128,7 +126,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
                         : "Good Evening";
                 set({ greeting });
 
-                // Fetch user profile
                 const userProfileResponse = await getCurrentUserProfile();
                 if (userProfileResponse.success && userProfileResponse.data) {
                     set({ userName: userProfileResponse.data.full_name });
@@ -148,7 +145,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
                 }
                 const userId = userResponse.data.id;
 
-                // Fetch tasks for today
                 const todayTaskResponse = await getFilteredTasks(
                     userId,
                     "today"
@@ -180,7 +176,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
                     set({ todayTasks: [] });
                 }
 
-                // Fetch all tasks
                 const allTaskResponse = await getFilteredTasks(userId, "all");
                 if (allTaskResponse.success && allTaskResponse.data) {
                     const transformedAllTasks = allTaskResponse.data.map(
@@ -209,7 +204,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
                     set({ allTasks: [] });
                 }
 
-                // Fetch journals for this week
                 const journalResponse = await getFilteredJournals(
                     userId,
                     "this-week"

@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { DateTime } from "luxon";
 
-// ===== TYPES =====
 export interface Task {
     id?: string;
     user_id?: string;
@@ -41,7 +40,6 @@ export interface ServiceResponse<T> {
     error?: string;
 }
 
-// ===== UTILITIES =====
 const handleError = (error: unknown, context: string): string => {
     console.error(`${context}:`, error);
     return error instanceof Error ? error.message : "Unknown error occurred";
@@ -49,7 +47,9 @@ const handleError = (error: unknown, context: string): string => {
 
 const formatDate = (dateString: string): string => {
     try {
-        const dt = DateTime.fromISO(dateString, { zone: "utc" }).setZone("Asia/Jakarta");
+        const dt = DateTime.fromISO(dateString, { zone: "utc" }).setZone(
+            "Asia/Jakarta"
+        );
         console.log("formatDate input:", dateString, "output:", dt.toISO());
         return dt.toLocaleString({
             day: "numeric",
@@ -62,7 +62,6 @@ const formatDate = (dateString: string): string => {
     }
 };
 
-// ===== CORE FUNCTIONS =====
 export const getCurrentUserId = async (): Promise<ServiceResponse<string>> => {
     try {
         const {
@@ -310,7 +309,9 @@ export const getTaskStats = async (
                 (t) =>
                     !t.completed &&
                     t.deadline &&
-                    DateTime.fromISO(t.deadline, { zone: "utc" }).setZone("Asia/Jakarta") < now
+                    DateTime.fromISO(t.deadline, { zone: "utc" }).setZone(
+                        "Asia/Jakarta"
+                    ) < now
             ).length,
         };
 
@@ -405,14 +406,15 @@ export const transformTaskForCard = (task: TaskWithSubTasks) => {
             : task.created_at
             ? formatDate(task.created_at)
             : "No date",
-        originalDeadline: task.deadline ?? undefined, // Convert null to undefined
+        originalDeadline: task.deadline ?? undefined,
         completedCount: totalSubTasks > 0 ? completedSubTasks : undefined,
         totalCount: totalSubTasks > 0 ? totalSubTasks : undefined,
-        subTasks: task.sub_tasks?.map((st) => ({
-            id: st.id!,
-            title: st.title,
-            completed: st.completed,
-        })) || [],
+        subTasks:
+            task.sub_tasks?.map((st) => ({
+                id: st.id!,
+                title: st.title,
+                completed: st.completed,
+            })) || [],
         completed: task.completed,
         originalPriority: task.priority,
         doneAt: task.doneAt,

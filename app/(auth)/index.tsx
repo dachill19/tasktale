@@ -36,11 +36,15 @@ export default function LandingPage() {
                 textAlign="center"
                 px="$6"
             >
-                Ceritakan Hari &{" "}
+                Share Your Day &{" "}
                 <Text color="$blue8" fontWeight="bold">
-                    Atur Tugas
+                    Manage Your Task
                 </Text>
-                -Mu
+                , All in {""}
+                <Text color="$blue8" fontWeight="bold">
+                    ONE {""}
+                </Text>
+                Place
             </Text>
 
             <Link href="/auth" asChild>

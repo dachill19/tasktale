@@ -56,12 +56,10 @@ const JournalCard: React.FC<JournalCardProps> = ({
         }
     };
 
-    // Helper function to render images based on count
     const renderImages = () => {
         if (!images || images.length === 0) return null;
 
         if (images.length === 1) {
-            // Single image - display large
             return (
                 <TouchableOpacity
                     onPress={() => openFullscreen(0)}
@@ -78,7 +76,6 @@ const JournalCard: React.FC<JournalCardProps> = ({
                 </TouchableOpacity>
             );
         } else if (images.length === 2) {
-            // Two images - display side by side
             return (
                 <XStack gap="$2" marginBottom="$3">
                     {images.map((image, index) => (
@@ -100,7 +97,6 @@ const JournalCard: React.FC<JournalCardProps> = ({
                 </XStack>
             );
         } else if (images.length === 3) {
-            // Three images - first large, two small on the right
             return (
                 <XStack gap="$2" marginBottom="$3">
                     <TouchableOpacity
@@ -136,7 +132,6 @@ const JournalCard: React.FC<JournalCardProps> = ({
                 </XStack>
             );
         } else {
-            // Four or more images - grid layout with horizontal scroll for overflow
             return (
                 <YStack marginBottom="$3">
                     <XStack gap="$2" marginBottom="$2">
@@ -232,7 +227,6 @@ const JournalCard: React.FC<JournalCardProps> = ({
         }
     };
 
-    // Fullscreen Image Modal
     const renderFullscreenModal = () => {
         if (!images || !fullscreenVisible) return null;
 

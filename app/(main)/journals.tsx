@@ -1,8 +1,7 @@
-// app/(main)/journals.tsx
 import FilterToggleGroup from "@/components/FilterToggleGroup";
 import JournalCard from "@/components/journal/JournalCard";
 import { JournalDialog } from "@/components/journal/JournalDialog";
-import { JournalsSkeleton } from "@/components/skeletons/JournalsSkeleton"; // Add this import
+import { JournalsSkeleton } from "@/components/skeletons/JournalsSkeleton";
 import { JournalFormData as ServiceJournalFormData } from "@/lib/journal";
 import { useJournalStore } from "@/lib/stores/journalStore";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -10,7 +9,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, RefreshControl } from "react-native";
 import { Text, YStack } from "tamagui";
 
-// Type untuk form data dari dialog
 type DialogJournalFormData = {
     mood: string;
     content: string;
@@ -35,7 +33,6 @@ const Journals = () => {
     const [open, setOpen] = useState(false);
     const params = useLocalSearchParams();
 
-    // Handle dialog opening from navigation params
     useEffect(() => {
         if (params.openDialog === "true") {
             setOpen(true);
@@ -43,12 +40,10 @@ const Journals = () => {
         }
     }, [params]);
 
-    // Initialize user on mount
     useEffect(() => {
         initializeUser();
     }, [initializeUser]);
 
-    // Use focus effect to refresh data when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             if (currentUserId) {
@@ -57,7 +52,6 @@ const Journals = () => {
         }, [currentUserId, filter, fetchFilteredJournals])
     );
 
-    // Show error alerts when error state changes
     useEffect(() => {
         if (error) {
             Alert.alert("Error", error);
@@ -77,7 +71,6 @@ const Journals = () => {
         }
 
         try {
-            // Transform dialog form data to service form data
             const serviceFormData: ServiceJournalFormData = {
                 mood: formData.mood,
                 content: formData.content,
@@ -155,7 +148,7 @@ const Journals = () => {
     ];
 
     if (loading) {
-        return <JournalsSkeleton />; // Use JournalsSkeleton instead of Spinner
+        return <JournalsSkeleton />;
     }
 
     return (

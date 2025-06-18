@@ -1,20 +1,15 @@
-// lib/stores/authFormStore.ts
 import { create } from "zustand";
 
 interface AuthFormState {
-    // Login form
     email: string;
     password: string;
 
-    // Signup form
     username: string;
     confirmPassword: string;
 
-    // UI state
     isLogin: boolean;
     error: string;
 
-    // Actions
     setEmail: (email: string) => void;
     setPassword: (password: string) => void;
     setUsername: (username: string) => void;
@@ -24,13 +19,11 @@ interface AuthFormState {
     clearForm: () => void;
     switchForm: () => void;
 
-    // Validation
     validateLoginForm: () => string | null;
     validateSignupForm: () => string | null;
 }
 
 export const useAuthFormStore = create<AuthFormState>((set, get) => ({
-    // Initial state
     email: "",
     password: "",
     username: "",
@@ -38,7 +31,6 @@ export const useAuthFormStore = create<AuthFormState>((set, get) => ({
     isLogin: true,
     error: "",
 
-    // Setters
     setEmail: (email) => set({ email }),
     setPassword: (password) => set({ password }),
     setUsername: (username) => set({ username }),
@@ -46,7 +38,6 @@ export const useAuthFormStore = create<AuthFormState>((set, get) => ({
     setIsLogin: (isLogin) => set({ isLogin }),
     setError: (error) => set({ error }),
 
-    // Clear form
     clearForm: () =>
         set({
             email: "",
@@ -56,20 +47,17 @@ export const useAuthFormStore = create<AuthFormState>((set, get) => ({
             error: "",
         }),
 
-    // Switch between login and signup
     switchForm: () => {
         const { isLogin } = get();
         set({
             isLogin: !isLogin,
             error: "",
-            // Keep email but clear other fields when switching
             password: "",
             username: "",
             confirmPassword: "",
         });
     },
 
-    // Validation functions
     validateLoginForm: () => {
         const { email, password } = get();
 

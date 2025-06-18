@@ -1,4 +1,3 @@
-// lib/stores/authStore.ts
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import * as Linking from "expo-linking";
@@ -10,13 +9,11 @@ import { create } from "zustand";
 WebBrowser.maybeCompleteAuthSession();
 
 interface AuthState {
-    // State
     user: User | null;
     session: Session | null;
     isLoading: boolean;
     isInitialized: boolean;
 
-    // Actions
     initialize: () => Promise<void>;
     signInWithEmail: (
         email: string,
@@ -29,18 +26,15 @@ interface AuthState {
     ) => Promise<{ error?: string }>;
     signInWithGoogle: () => Promise<{ error?: string }>;
     signOut: () => Promise<void>;
-    clearError: () => void;
     handleDeepLink: (url: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-    // Initial state
     user: null,
     session: null,
     isLoading: false,
     isInitialized: false,
 
-    // Initialize auth state
     initialize: async () => {
         try {
             const {
@@ -53,7 +47,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 isInitialized: true,
             });
 
-            // Set up auth state listener
             supabase.auth.onAuthStateChange(async (event, session) => {
                 console.log("Auth state changed:", event, session?.user?.email);
 
@@ -63,7 +56,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 });
 
                 if (event === "SIGNED_IN" && session) {
-                    // Small delay to ensure state is updated
                     setTimeout(() => {
                         router.replace("/(main)");
                     }, 100);
@@ -72,13 +64,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 }
             });
 
-            // Handle initial deep link if exists
             const initialUrl = await Linking.getInitialURL();
             if (initialUrl) {
                 await get().handleDeepLink(initialUrl);
             }
 
-            // Set up deep link listener
             Linking.addEventListener("url", ({ url }) => {
                 get().handleDeepLink(url);
             });
@@ -88,17 +78,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    // Handle deep link for OAuth callback
     handleDeepLink: async (url: string) => {
         try {
             console.log("Handling deep link:", url);
 
-            // Check if this is an auth callback
             if (
                 url.includes("#access_token=") ||
                 url.includes("?access_token=")
             ) {
-                // Parse the URL manually since getSessionFromUrl doesn't exist
                 const urlParams = new URLSearchParams(
                     url.split("#")[1] || url.split("?")[1]
                 );
@@ -106,7 +93,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 const refreshToken = urlParams.get("refresh_token");
 
                 if (accessToken) {
-                    // Set the session manually
                     const { data, error } = await supabase.auth.setSession({
                         access_token: accessToken,
                         refresh_token: refreshToken || "",
@@ -134,7 +120,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    // Email sign in
     signInWithEmail: async (email: string, password: string) => {
         set({ isLoading: true });
 
@@ -156,7 +141,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    // Email sign up
     signUpWithEmail: async (
         username: string,
         email: string,
@@ -188,7 +172,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    // Google sign in
     signInWithGoogle: async () => {
         set({ isLoading: true });
 
@@ -223,10 +206,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 console.log("Auth session result:", result);
 
                 if (result.type === "success" && result.url) {
-                    // Handle the callback URL
                     await get().handleDeepLink(result.url);
 
-                    // Double check if we got the session
                     const { data: sessionData } =
                         await supabase.auth.getSession();
 
@@ -261,7 +242,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
     },
 
-    // Sign out
     signOut: async () => {
         try {
             const { error } = await supabase.auth.signOut();
@@ -276,14 +256,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             Alert.alert("Error", "Failed to logout");
         }
     },
-
-    // Clear error
-    clearError: () => {
-        // This can be used if you want to add error state to the store
-    },
 }));
 
-// Hook for checking if user is authenticated
 export const useIsAuthenticated = () => {
     const { user, session } = useAuthStore();
     return !!(user && session);

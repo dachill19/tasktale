@@ -149,7 +149,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             elevation={2}
             animation="quick"
             pressStyle={{
-                scale: 0.95, // opsional, beri efek scale saat ditekan
+                scale: 0.95,
             }}
         >
             <XStack

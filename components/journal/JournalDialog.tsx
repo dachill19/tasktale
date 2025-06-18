@@ -45,7 +45,6 @@ export function JournalDialog({
     onCancel,
 }: JournalDialogProps) {
     const {
-        // Form state
         mood,
         content,
         images,
@@ -61,7 +60,6 @@ export function JournalDialog({
         getFormData,
     } = useJournalDialogStore();
 
-    // Reset form when dialog opens
     useEffect(() => {
         if (open) {
             resetForm();
@@ -88,7 +86,6 @@ export function JournalDialog({
 
     const pickImage = async () => {
         try {
-            // Request permission first
             const permissionResult =
                 await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -109,8 +106,7 @@ export function JournalDialog({
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const uri = result.assets[0].uri;
-                // Just add the local image URI to the store
-                addImage(uri, true); // true = isLocal (will be uploaded on save)
+                addImage(uri, true);
             }
         } catch (error) {
             console.error("Error picking image:", error);

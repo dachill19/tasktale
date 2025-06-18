@@ -1,9 +1,14 @@
-// app/(main)/profile.tsx
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useJournalStore } from "@/lib/stores/journalStore";
 import { useProfileStore, useUserInfo } from "@/lib/stores/profileStore";
 import { useTaskStore } from "@/lib/stores/taskStore";
-import { ArrowLeft, BookOpen, Calendar, CheckSquare, User } from "@tamagui/lucide-icons";
+import {
+    ArrowLeft,
+    BookOpen,
+    Calendar,
+    CheckSquare,
+    User,
+} from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Dimensions, ImageBackground } from "react-native";
@@ -17,7 +22,7 @@ import {
     Text,
     View,
     XStack,
-    YStack
+    YStack,
 } from "tamagui";
 
 const { width, height } = Dimensions.get("window");
@@ -27,22 +32,20 @@ export default function Profile() {
     const { tasks } = useTaskStore();
     const { journals } = useJournalStore();
     const { updateProfile, isLoading, error, clearError } = useProfileStore();
-    
+
     const [name, setName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [isEditing, setIsEditing] = useState(false);
 
-    // Get user info using the helper hook
-    const { userName, userEmail, userAvatar, userPhone, accountCreated } = useUserInfo(user);
+    const { userName, userEmail, userAvatar, userPhone, accountCreated } =
+        useUserInfo(user);
 
-    // Calculate totals
     const totalTasks = tasks?.length || 0;
     const totalJournals = journals?.length || 0;
 
     useEffect(() => {
         setName(userName);
         setPhoneNumber(userPhone);
-        // Clear any previous errors when component mounts
         clearError();
     }, [user, userName, userPhone, clearError]);
 
@@ -66,7 +69,6 @@ export default function Profile() {
     };
 
     const handleCancelEdit = () => {
-        // Reset form values to original user data
         setName(userName);
         setPhoneNumber(userPhone);
         setIsEditing(false);
@@ -152,7 +154,11 @@ export default function Profile() {
                                         )}
                                     </Avatar>
                                     <YStack ai="center" gap="$1">
-                                        <Text fontSize="$7" fontWeight="bold" color="$color12">
+                                        <Text
+                                            fontSize="$7"
+                                            fontWeight="bold"
+                                            color="$color12"
+                                        >
                                             {userName}
                                         </Text>
                                         <Text fontSize="$4" color="$color10">
@@ -180,11 +186,22 @@ export default function Profile() {
                                     p="$3"
                                 >
                                     <YStack ai="center" gap="$2">
-                                        <CheckSquare size={24} color="$green10" />
-                                        <Text fontSize="$6" fontWeight="bold" color="$green11">
+                                        <CheckSquare
+                                            size={24}
+                                            color="$green10"
+                                        />
+                                        <Text
+                                            fontSize="$6"
+                                            fontWeight="bold"
+                                            color="$green11"
+                                        >
                                             {totalTasks}
                                         </Text>
-                                        <Text fontSize="$3" color="$green10" textAlign="center">
+                                        <Text
+                                            fontSize="$3"
+                                            color="$green10"
+                                            textAlign="center"
+                                        >
                                             Total Tasks
                                         </Text>
                                     </YStack>
@@ -202,10 +219,18 @@ export default function Profile() {
                                 >
                                     <YStack ai="center" gap="$2">
                                         <BookOpen size={24} color="$blue10" />
-                                        <Text fontSize="$6" fontWeight="bold" color="$blue11">
+                                        <Text
+                                            fontSize="$6"
+                                            fontWeight="bold"
+                                            color="$blue11"
+                                        >
                                             {totalJournals}
                                         </Text>
-                                        <Text fontSize="$3" color="$blue10" textAlign="center">
+                                        <Text
+                                            fontSize="$3"
+                                            color="$blue10"
+                                            textAlign="center"
+                                        >
                                             Total Journals
                                         </Text>
                                     </YStack>
@@ -224,16 +249,24 @@ export default function Profile() {
                                 <YStack gap="$3">
                                     <XStack ai="center" gap="$2">
                                         <Calendar size={20} color="$color10" />
-                                        <Text fontSize="$5" fontWeight="600" color="$color12">
+                                        <Text
+                                            fontSize="$5"
+                                            fontWeight="600"
+                                            color="$color12"
+                                        >
                                             Account Information
                                         </Text>
                                     </XStack>
                                     <YStack gap="$2" ml="$6">
                                         <Text fontSize="$4" color="$color10">
-                                            <Text fontWeight="600">Created:</Text> {accountCreated}
+                                            <Text fontWeight="600">
+                                                Created:
+                                            </Text>{" "}
+                                            {accountCreated}
                                         </Text>
                                         <Text fontSize="$4" color="$color10">
-                                            <Text fontWeight="600">Email:</Text> {userEmail}
+                                            <Text fontWeight="600">Email:</Text>{" "}
+                                            {userEmail}
                                         </Text>
                                     </YStack>
                                 </YStack>
@@ -250,7 +283,11 @@ export default function Profile() {
                             >
                                 <YStack gap="$4">
                                     <XStack jc="space-between" ai="center">
-                                        <Text fontSize="$6" fontWeight="bold" color="$green10">
+                                        <Text
+                                            fontSize="$6"
+                                            fontWeight="bold"
+                                            color="$green10"
+                                        >
                                             Profile Information
                                         </Text>
                                         <Button
@@ -258,7 +295,9 @@ export default function Profile() {
                                             variant="outlined"
                                             borderColor="$green8"
                                             color="$green10"
-                                            onPress={() => setIsEditing(!isEditing)}
+                                            onPress={() =>
+                                                setIsEditing(!isEditing)
+                                            }
                                             pressStyle={{
                                                 backgroundColor: "$green3",
                                                 scale: 0.95,
@@ -270,7 +309,11 @@ export default function Profile() {
 
                                     {/* Show error if exists */}
                                     {error && (
-                                        <Card backgroundColor="$red2" borderColor="$red8" p="$3">
+                                        <Card
+                                            backgroundColor="$red2"
+                                            borderColor="$red8"
+                                            p="$3"
+                                        >
                                             <Text fontSize="$3" color="$red10">
                                                 {error}
                                             </Text>
@@ -279,7 +322,11 @@ export default function Profile() {
 
                                     <YStack gap="$3">
                                         <YStack gap="$2">
-                                            <Text fontSize="$4" fontWeight="600" color="$color11">
+                                            <Text
+                                                fontSize="$4"
+                                                fontWeight="600"
+                                                color="$color11"
+                                            >
                                                 Name
                                             </Text>
                                             {isEditing ? (
@@ -294,20 +341,29 @@ export default function Profile() {
                                                     }}
                                                 />
                                             ) : (
-                                                <Text fontSize="$4" color="$color10">
+                                                <Text
+                                                    fontSize="$4"
+                                                    color="$color10"
+                                                >
                                                     {name || "Not set"}
                                                 </Text>
                                             )}
                                         </YStack>
 
                                         <YStack gap="$2">
-                                            <Text fontSize="$4" fontWeight="600" color="$color11">
+                                            <Text
+                                                fontSize="$4"
+                                                fontWeight="600"
+                                                color="$color11"
+                                            >
                                                 Phone Number
                                             </Text>
                                             {isEditing ? (
                                                 <Input
                                                     value={phoneNumber}
-                                                    onChangeText={setPhoneNumber}
+                                                    onChangeText={
+                                                        setPhoneNumber
+                                                    }
                                                     placeholder="Enter your phone number"
                                                     size="$4"
                                                     keyboardType="phone-pad"
@@ -317,7 +373,10 @@ export default function Profile() {
                                                     }}
                                                 />
                                             ) : (
-                                                <Text fontSize="$4" color="$color10">
+                                                <Text
+                                                    fontSize="$4"
+                                                    color="$color10"
+                                                >
                                                     {phoneNumber || "Not set"}
                                                 </Text>
                                             )}
@@ -334,7 +393,8 @@ export default function Profile() {
                                                     onPress={handleCancelEdit}
                                                     disabled={isLoading}
                                                     pressStyle={{
-                                                        backgroundColor: "$color3",
+                                                        backgroundColor:
+                                                            "$color3",
                                                         scale: 0.95,
                                                     }}
                                                 >
@@ -348,13 +408,18 @@ export default function Profile() {
                                                     fontWeight="bold"
                                                     onPress={handleSaveProfile}
                                                     disabled={isLoading}
-                                                    opacity={isLoading ? 0.5 : 1}
+                                                    opacity={
+                                                        isLoading ? 0.5 : 1
+                                                    }
                                                     pressStyle={{
-                                                        backgroundColor: "$green9",
+                                                        backgroundColor:
+                                                            "$green9",
                                                         scale: 0.95,
                                                     }}
                                                 >
-                                                    {isLoading ? "Saving..." : "Save Changes"}
+                                                    {isLoading
+                                                        ? "Saving..."
+                                                        : "Save Changes"}
                                                 </Button>
                                             </XStack>
                                         )}

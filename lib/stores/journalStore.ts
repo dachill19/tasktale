@@ -79,7 +79,6 @@ export const useJournalStore = create<JournalState>((set, get) => ({
                 error: null,
             }));
 
-            // Refresh stats after creating new journal
             const currentState = get();
             if (currentState.currentUserId) {
                 currentState.fetchJournalStats(currentState.currentUserId);
@@ -102,7 +101,6 @@ export const useJournalStore = create<JournalState>((set, get) => ({
                 error: null,
             }));
 
-            // Refresh stats after deleting journal
             const currentState = get();
             if (currentState.currentUserId) {
                 currentState.fetchJournalStats(currentState.currentUserId);

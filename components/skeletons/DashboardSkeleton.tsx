@@ -1,4 +1,3 @@
-// components/skeletons/DashboardSkeleton.tsx
 import { Skeleton } from "moti/skeleton";
 import { ScrollView } from "react-native";
 import { XStack, YStack } from "tamagui";
